@@ -24,7 +24,16 @@ if ($ApiPort -eq 0) { $ApiPort = if ($settings['API_PORT']) { [int]$settings['AP
 if ($WebPort -eq 0) { $WebPort = if ($settings['WEB_PORT']) { [int]$settings['WEB_PORT'] } else { 3000 } }
 $apiHost = if ($settings['APP_HOST']) { $settings['APP_HOST'] } else { '127.0.0.1' }
 
-if ($Install -or -not (Test-Path $VenvPython)) {
+# Reinstall automatically when dependency lists changed (e.g. after `git pull`).
+$stampFile = Join-Path $RepoRoot 'data\.deps-stamp'
+$depsHash = (@(
+        (Get-FileHash (Join-Path $ApiDir 'pyproject.toml')).Hash,
+        (Get-FileHash (Join-Path $WebDir 'package-lock.json')).Hash
+    ) -join ';')
+$depsChanged = -not (Test-Path $stampFile) -or ((Get-Content $stampFile -Raw).Trim() -ne $depsHash)
+if ($depsChanged -and -not $Install) { Write-Step 'Dependencies changed since the last install' }
+
+if ($Install -or $depsChanged -or -not (Test-Path $VenvPython)) {
     Write-Step 'Creating Python virtual environment'
     $python = Get-PythonCommand
     if (-not $python) { throw 'Python 3.11+ is required. Install it with: winget install -e --id Python.Python.3.12' }
@@ -34,11 +43,13 @@ if ($Install -or -not (Test-Path $VenvPython)) {
     Invoke-Checked -FilePath $VenvPython -Arguments @('-m', 'pip', 'install', '--upgrade', 'pip') -WorkingDirectory $ApiDir -Description 'pip upgrade'
     Invoke-Checked -FilePath $VenvPython -Arguments @('-m', 'pip', 'install', '-e', '.[dev]') -WorkingDirectory $ApiDir -Description 'pip install'
 }
-if ($Install -or -not (Test-Path (Join-Path $WebDir 'node_modules'))) {
+if ($Install -or $depsChanged -or -not (Test-Path (Join-Path $WebDir 'node_modules'))) {
     Write-Step 'Installing Node dependencies'
     # npm.cmd avoids the PowerShell execution policy prompt for npm.ps1.
     Invoke-Checked -FilePath 'npm.cmd' -Arguments @('ci', '--no-audit', '--no-fund') -WorkingDirectory $WebDir -Description 'npm ci'
 }
+New-Item -ItemType Directory -Force -Path (Split-Path $stampFile) | Out-Null
+Set-Content -Path $stampFile -Value $depsHash
 
 foreach ($port in @($ApiPort, $WebPort)) {
     if (-not (Test-PortFree $port)) {

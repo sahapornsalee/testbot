@@ -31,4 +31,6 @@ cd "$ROOT/apps/web"
 npm ci --no-audit --no-fund
 API_INTERNAL_URL=http://127.0.0.1:8000 NEXT_TELEMETRY_DISABLED=1 npm run build
 
+mkdir -p "$ROOT/data"
+bash "$ROOT/scripts/codespaces/fingerprint.sh" >"$ROOT/data/.setup-fingerprint"
 echo "==> Setup complete"

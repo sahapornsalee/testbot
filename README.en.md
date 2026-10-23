@@ -25,7 +25,10 @@ Terminal commands inside the codespace:
 bash scripts/codespaces/start.sh   # (re)start — runs automatically whenever the codespace starts
 bash scripts/codespaces/stop.sh    # stop
 tail -f data/logs/api.log          # logs
+git pull && bash scripts/codespaces/start.sh   # update (reinstalls/rebuilds automatically when code changed)
 ```
+
+If the UI says **"Cannot reach the API server"**, the API is not running: run `bash scripts/codespaces/start.sh` again and check `tail -n 30 data/logs/api.log` for the reason.
 
 **Security and cost**
 

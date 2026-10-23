@@ -13,7 +13,13 @@ if [ -n "${CODESPACE_NAME:-}" ] && [ -n "${GITHUB_CODESPACES_PORT_FORWARDING_DOM
   ORIGINS="https://${CODESPACE_NAME}-3000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN},${ORIGINS}"
 fi
 
-if [ ! -x "$ROOT/services/api/.venv/bin/python" ] || [ ! -d "$ROOT/apps/web/.next" ]; then
+# Re-run setup when the code changed since the last install/build (e.g. after `git pull`),
+# so new dependencies get installed and the web UI is rebuilt.
+STAMP="$ROOT/data/.setup-fingerprint"
+CURRENT="$(bash "$ROOT/scripts/codespaces/fingerprint.sh")"
+if [ ! -x "$ROOT/services/api/.venv/bin/python" ] || [ ! -d "$ROOT/apps/web/.next" ] \
+  || [ ! -f "$STAMP" ] || [ "$(cat "$STAMP")" != "$CURRENT" ]; then
+  echo "==> Code changed since the last setup: installing dependencies and rebuilding"
   bash "$ROOT/scripts/codespaces/setup.sh"
 fi
 

@@ -25,7 +25,10 @@
 bash scripts/codespaces/start.sh   # เริ่มใหม่ (ทำอัตโนมัติทุกครั้งที่เปิด codespace)
 bash scripts/codespaces/stop.sh    # หยุด
 tail -f data/logs/api.log          # ดู log
+git pull && bash scripts/codespaces/start.sh   # อัปเดตเป็นเวอร์ชันล่าสุด (ติดตั้ง/build ใหม่ให้เองถ้าโค้ดเปลี่ยน)
 ```
+
+ถ้าหน้าเว็บขึ้นว่า **"เชื่อมต่อเซิร์ฟเวอร์ API ไม่ได้"** แปลว่า API ไม่ได้ทำงาน ให้รัน `bash scripts/codespaces/start.sh` อีกครั้ง แล้วดูสาเหตุด้วย `tail -n 30 data/logs/api.log`
 
 **ความปลอดภัยและค่าใช้จ่าย**
 
