@@ -1,0 +1,97 @@
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@container widget (max-width: 640px) {
+  .kanban {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kanban-column {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-height: 120px;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.kanban-column.is-over {
+  outline: 2px dashed var(--color-primary);
+}
+
+.kanban-column h3 {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+.kanban-card {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: grab;
+  overflow-wrap: anywhere;
+}
+
+.kanban-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+}
+
+.kanban-card .task-actions {
+  flex-wrap: wrap;
+}
+
+.reminder-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.reminder-item.is-done {
+  opacity: 0.6;
+}
+
+.reminder-item.is-overdue small {
+  color: var(--color-danger);
+}
+
+.reminder-item small {
+  display: block;
+  color: var(--color-text-muted);
+}
+
+.time-select {
+  display: flex;
+  gap: var(--space-1);
+  align-items: end;
+}
+
+.reminder-toast {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 50;
+  display: grid;
+  gap: var(--space-2);
+  max-width: min(360px, calc(100vw - 32px));
+  padding: var(--space-4);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.25);
+}

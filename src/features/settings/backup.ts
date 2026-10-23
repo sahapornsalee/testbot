@@ -19,6 +19,12 @@ import { HABITS_KEY, parseHabits } from "../life/habits";
 import { parsePomodoro, POMODORO_KEY } from "../life/pomodoro";
 import { parseWorldClock, WORLD_CLOCK_KEY } from "../life/worldClock";
 import { TIMER_KEYS } from "../timer/persistence";
+import { parsePrompts, PROMPTS_KEY } from "../ai-tools/prompts";
+import { parseSignature, SIGNATURE_KEY } from "../files/signature";
+import { KANBAN_KEY, parseKanban } from "../organize/kanban";
+import { parseReminders, REMINDERS_KEY } from "../organize/reminders";
+import { parseVault, VAULT_KEY } from "../organize/vault";
+import { HOLIDAYS_KEY, parseHolidays } from "../thai/holidays";
 import { parseSettings, SETTINGS_KEY, type Settings } from "./settings";
 
 export const BACKUP_APP = "productivity-hub";
@@ -33,6 +39,13 @@ export const TOOL_STORES: readonly { key: string; parse: (raw: unknown) => unkno
   { key: POMODORO_KEY, parse: parsePomodoro },
   { key: WORLD_CLOCK_KEY, parse: parseWorldClock },
   { key: EMERGENCY_KEY, parse: parseMedical },
+  { key: PROMPTS_KEY, parse: parsePrompts },
+  { key: HOLIDAYS_KEY, parse: parseHolidays },
+  { key: KANBAN_KEY, parse: parseKanban },
+  { key: REMINDERS_KEY, parse: parseReminders },
+  // Stays encrypted in the backup; the password is still needed to open it.
+  { key: VAULT_KEY, parse: parseVault },
+  { key: SIGNATURE_KEY, parse: parseSignature },
 ];
 
 export interface BackupData {

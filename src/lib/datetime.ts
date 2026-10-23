@@ -138,3 +138,15 @@ export function formatLongDate(date: Date, config: DateTimeConfig): string {
     timeZone: config.timeZone,
   }).format(date);
 }
+
+/**
+ * The instant at which the wall clock in `zone` shows the given date and
+ * time (e.g. "9:00 on 24 Oct in Bangkok"). Handles DST by re-checking the
+ * offset at the resulting instant.
+ */
+export function zonedTimeToInstant(date: CalendarDate, hour: number, minute: number, zone: string): number {
+  const wall = Date.UTC(date.year, date.month - 1, date.day, hour, minute);
+  let instant = wall - zoneOffsetMinutes(zone, new Date(wall)) * 60_000;
+  instant = wall - zoneOffsetMinutes(zone, new Date(instant)) * 60_000;
+  return instant;
+}

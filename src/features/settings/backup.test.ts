@@ -15,6 +15,8 @@ import {
   type BackupData,
 } from "./backup";
 import { SETTINGS_KEY } from "./settings";
+import { addCard, EMPTY_KANBAN, KANBAN_KEY } from "../organize/kanban";
+import { encryptEntries, VAULT_KEY } from "../organize/vault";
 
 const task = { id: "t1", title: "งาน", done: false, order: 0, createdAt: 1, updatedAt: 1 };
 const note = { id: "n1", title: "โน้ต", body: "เนื้อหา", createdAt: 1, updatedAt: 1 };
@@ -70,6 +72,17 @@ describe("backup parsing", () => {
     expect(result.ok && result.data.settings).toBeNull();
     expect(result.ok && result.data.toolData).toEqual({});
     expect(result.ok && result.skipped).toBe(7);
+  });
+
+  it("round-trips new tool data and keeps the vault encrypted", async () => {
+    const kanban = addCard(EMPTY_KANBAN, "ทดสอบ", "todo", 1);
+    const vault = await encryptEntries([{ id: "v", title: "wifi", body: "secret-123" }], "password1", 100_000);
+    const text = JSON.stringify(buildBackup({ ...full, toolData: { [KANBAN_KEY]: kanban, [VAULT_KEY]: vault } }, new Date(0)));
+    expect(text).not.toContain("secret-123");
+    const result = parseBackup(text);
+    expect(result.ok && result.data.toolData).toEqual({ [KANBAN_KEY]: kanban, [VAULT_KEY]: vault });
+    const bad = parseBackup(JSON.stringify({ app: "productivity-hub", formatVersion: 1, tasks: [], notes: [], toolData: { [VAULT_KEY]: { version: 1, iterations: 5 } } }));
+    expect(bad.ok && bad.skipped).toBe(1);
   });
 
   it("checks file size and type before reading", async () => {

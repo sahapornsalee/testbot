@@ -3,6 +3,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DateInput } from "../../components/DateInput";
 import { displayYear, formatDate, monthName, weekdayNames, type DateLocale } from "../../lib/datetime";
 import { useDateTime } from "../settings/SettingsContext";
+import { usePersistentState } from "../../hooks/usePersistentState";
+import { EMPTY_HOLIDAYS, HOLIDAYS_KEY, holidaysOfYear, parseHolidays } from "../thai/holidays";
 import { addDays, addMonths, daysBetween, diffParts, monthGrid, parseIsoDate, sameDate, toIsoDate, type CalendarDate } from "./dates";
 import "./calendar.css";
 
@@ -13,6 +15,12 @@ export default function CalendarWidget() {
   const [selected, setSelected] = useState<CalendarDate>(now);
   const grid = monthGrid(view.year, view.month);
   const weekdays = weekdayNames(locale);
+  const [holidayData] = usePersistentState(HOLIDAYS_KEY, parseHolidays, EMPTY_HOLIDAYS);
+  const holidays = new Map<string, string>();
+  for (const y of new Set(grid.map((c) => c.date.year))) {
+    for (const h of holidaysOfYear(y, holidayData.custom)) if (h.kind !== "private") holidays.set(h.date, holidays.has(h.date) ? `${holidays.get(h.date)}, ${h.name}` : h.name);
+  }
+  const monthHolidays = [...holidays].filter(([d]) => d.startsWith(`${view.year}-${String(view.month).padStart(2, "0")}`));
 
   const go = (delta: number) => setView((v) => addMonths(v.year, v.month, delta));
 
@@ -77,10 +85,11 @@ export default function CalendarWidget() {
                     <button
                       type="button"
                       data-date={toIsoDate(date)}
-                      className={`calendar-day ${inMonth ? "" : "is-outside"} ${sameDate(date, now) ? "is-today" : ""}`}
+                      className={`calendar-day ${inMonth ? "" : "is-outside"} ${sameDate(date, now) ? "is-today" : ""} ${holidays.has(toIsoDate(date)) ? "is-holiday" : ""}`}
+                      title={holidays.get(toIsoDate(date))}
                       aria-pressed={isSelected}
                       aria-current={sameDate(date, now) ? "date" : undefined}
-                      aria-label={formatDate(date, locale)}
+                      aria-label={`${formatDate(date, locale)}${holidays.has(toIsoDate(date)) ? ` (วันหยุด: ${holidays.get(toIsoDate(date))})` : ""}`}
                       tabIndex={isSelected ? 0 : -1}
                       onClick={() => setSelected(date)}
                     >
@@ -93,6 +102,15 @@ export default function CalendarWidget() {
           ))}
         </tbody>
       </table>
+      {monthHolidays.length > 0 && (
+        <ul className="holiday-list" aria-label="วันหยุดในเดือนนี้">
+          {monthHolidays.map(([d, name]) => (
+            <li key={d}>
+              <strong>{Number(d.slice(8))}</strong> {name}
+            </li>
+          ))}
+        </ul>
+      )}
       <DateCalculator initial={now} locale={locale} />
     </div>
   );

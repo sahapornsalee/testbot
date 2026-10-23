@@ -60,3 +60,27 @@
   font-weight: 600;
   margin-bottom: var(--space-3);
 }
+
+.calendar-day.is-holiday {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.calendar-day.is-holiday[aria-pressed="true"] {
+  color: var(--color-on-primary);
+}
+
+.holiday-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.holiday-list strong {
+  display: inline-block;
+  min-width: 2em;
+  color: var(--color-danger);
+}

@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type WidgetSize = "small" | "medium" | "large";
 
-export type ToolCategory = "time" | "calculate" | "money" | "tasks" | "life" | "developer";
+export type ToolCategory = "time" | "tasks" | "ai" | "files" | "thai" | "calculate" | "money" | "life" | "developer";
 
 /** Metadata every tool/widget must declare (see docs/ARCHITECTURE.md). */
 export interface WidgetDefinition {
