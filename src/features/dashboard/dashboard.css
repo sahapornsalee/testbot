@@ -19,7 +19,8 @@
 .dashboard-grid {
   display: grid;
   gap: var(--space-4);
-  align-items: start;
+  /* Cards in the same row share the row height, so the grid has no ragged gaps. */
+  align-items: stretch;
 }
 
 .widget.is-editing {
@@ -96,6 +97,9 @@
 
 .widget-body {
   container: widget / inline-size;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: var(--space-4);
 }
 

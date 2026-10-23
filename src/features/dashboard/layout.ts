@@ -119,3 +119,33 @@ export function resolveColumns(width: number, setting: ColumnSetting): number {
 export function spanFor(size: WidgetSize, columns: number): number {
   return Math.min(SIZE_SPAN[size], columns);
 }
+
+/**
+ * Widens cards so every grid row is completely filled, keeping the user's
+ * order. Cards are placed row by row; when the next card does not fit, the
+ * leftover columns of the current row go to its narrowest cards first.
+ */
+export function fillRows(spans: readonly number[], columns: number): number[] {
+  const result = spans.map((span) => Math.max(1, Math.min(span, columns)));
+  let row: number[] = [];
+  let used = 0;
+
+  const closeRow = () => {
+    let leftover = columns - used;
+    while (leftover > 0 && row.length > 0) {
+      const narrowest = row.reduce((best, i) => ((result[i] as number) < (result[best] as number) ? i : best));
+      result[narrowest] = (result[narrowest] as number) + 1;
+      leftover--;
+    }
+    row = [];
+    used = 0;
+  };
+
+  result.forEach((span, index) => {
+    if (used + span > columns) closeRow();
+    row.push(index);
+    used += span;
+  });
+  closeRow();
+  return result;
+}
