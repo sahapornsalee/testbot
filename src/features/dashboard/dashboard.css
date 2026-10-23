@@ -1,15 +1,76 @@
+.dashboard-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.dashboard-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   gap: var(--space-4);
   align-items: start;
 }
 
-@media (min-width: 1100px) {
-  .dashboard-grid .widget-medium,
-  .dashboard-grid .widget-large {
-    grid-column: span 2;
-  }
+.widget.is-editing {
+  cursor: grab;
+  border-style: dashed;
+}
+
+.widget.is-hidden {
+  opacity: 0.6;
+}
+
+.drag-handle {
+  color: var(--color-text-muted);
+}
+
+.widget-edit {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+
+.widget-edit p {
+  margin: 0;
+}
+
+.inline-size .input {
+  width: auto;
+  min-height: 32px;
+  padding: 2px var(--space-2);
+}
+
+.other-tools {
+  margin-top: var(--space-8);
+}
+
+.section-title {
+  margin-bottom: var(--space-3);
+  font-size: 1.15rem;
+}
+
+.add-card {
+  width: 100%;
+  border-style: dashed;
+  text-align: left;
+  cursor: pointer;
+}
+
+.add-card .add-icon {
+  margin-left: auto;
+  flex: none;
+  color: var(--color-primary);
 }
 
 .widget {
@@ -34,6 +95,7 @@
 }
 
 .widget-body {
+  container: widget / inline-size;
   padding: var(--space-4);
 }
 
@@ -105,5 +167,5 @@
 }
 
 .tool-page {
-  max-width: 720px;
+  max-width: 960px;
 }

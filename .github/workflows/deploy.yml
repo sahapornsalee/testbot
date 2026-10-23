@@ -13,6 +13,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  BASE_PATH: /${{ github.event.repository.name }}/
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,13 +35,14 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit and component tests
         run: npm run test
 
       - name: Build
         run: npm run build
-        env:
-          BASE_PATH: /${{ github.event.repository.name }}/
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -46,10 +50,40 @@ jobs:
         with:
           path: dist
 
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
   deploy:
-    # Publishes only from main. Requires Settings → Pages → Source: GitHub Actions.
+    # Publishes only from main after every check passes.
+    # Requires Settings → Pages → Source: GitHub Actions.
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: build
+    needs: [build, e2e]
     runs-on: ubuntu-latest
     permissions:
       pages: write

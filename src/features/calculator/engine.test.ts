@@ -48,6 +48,12 @@ describe("calculator engine", () => {
     expect(value("1,000 + 1")).toBe(1001);
   });
 
+  it("accepts scientific notation so large results can be reused", () => {
+    expect(value("1e+20 * 2")).toBe(2e20);
+    expect(value("1.5e-3 * 1000")).toBe(1.5);
+    expect(error("1e")).toBe("invalid-character");
+  });
+
   it("rejects division by zero", () => {
     expect(error("5 / 0")).toBe("division-by-zero");
     expect(error("1 / (2 - 2)")).toBe("division-by-zero");

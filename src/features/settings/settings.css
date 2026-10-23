@@ -1,8 +1,17 @@
+.settings-layout {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 720px;
+}
+
 .settings-card {
   display: grid;
-  gap: var(--space-6);
-  max-width: 640px;
+  gap: var(--space-5);
   padding: var(--space-6);
+}
+
+.settings-section-title {
+  font-size: 1.15rem;
 }
 
 .settings-group {
@@ -40,4 +49,36 @@
   width: 100%;
   margin: 0 0 var(--space-2);
   color: var(--color-text-muted);
+}
+
+.import-confirm {
+  padding: var(--space-4);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+}
+
+.danger-zone {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.settings-message {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.settings-message.success {
+  color: var(--color-success);
+}
+
+.settings-message.error {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }

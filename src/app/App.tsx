@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { AppBanners } from "../components/AppBanners";
 import { AppShell } from "../components/layout/AppShell";
 import { NotFound } from "../components/NotFound";
 import { Dashboard } from "../features/dashboard/Dashboard";
-import { FavoritesProvider, useFavorites } from "../features/dashboard/FavoritesContext";
+import { LayoutProvider, useLayout } from "../features/dashboard/LayoutContext";
 import { SearchResults } from "../features/dashboard/SearchResults";
 import { ToolPage } from "../features/dashboard/ToolPage";
 import { SettingsPage } from "../features/settings/SettingsPage";
@@ -31,14 +32,18 @@ const ISSUE_MESSAGES: Partial<Record<StorageIssue, string>> = {
 
 function StorageNotice() {
   const { storageIssue: settingsIssue } = useSettings();
-  const { storageIssue: favoritesIssue } = useFavorites();
-  const issue = [settingsIssue, favoritesIssue].find((i) => i !== "none");
+  const { storageIssue: layoutIssue } = useLayout();
+  const issue = [settingsIssue, layoutIssue].find((i) => i !== "none");
   const message = issue ? ISSUE_MESSAGES[issue] : undefined;
-  if (!message) return null;
   return (
-    <p className="notice" role="status">
-      {message}
-    </p>
+    <>
+      <AppBanners />
+      {message && (
+        <p className="notice" role="status">
+          {message}
+        </p>
+      )}
+    </>
   );
 }
 
@@ -74,9 +79,9 @@ function Shell() {
 export function App() {
   return (
     <SettingsProvider>
-      <FavoritesProvider>
+      <LayoutProvider>
         <Shell />
-      </FavoritesProvider>
+      </LayoutProvider>
     </SettingsProvider>
   );
 }

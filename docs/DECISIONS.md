@@ -20,3 +20,24 @@ Stopwatch/Countdown เก็บเวลาเริ่ม/เวลาสิ�
 
 ## ADR-006 — Base path ตั้งได้ด้วย `BASE_PATH`
 ค่าเริ่มต้น `/testbot/` ตามชื่อ repository ใน CI ใช้ชื่อ repository อัตโนมัติ
+
+## ADR-007 — IndexedDB แบบไม่มี dependency
+ใช้ API ของเบราว์เซอร์ตรง ๆ ผ่าน wrapper เล็ก ๆ (`src/data/db.ts`) แทน Dexie/idb เพื่อลด dependency; ทดสอบด้วย `fake-indexeddb` (dev only)
+
+## ADR-008 — Favorites รวมเข้ากับ Dashboard layout
+“ปักหมุด” = อยู่บน Dashboard ส่วน “ซ่อน” = อยู่ใน layout แต่ไม่แสดง ข้อมูล v0.1.0 ถูก migrate อัตโนมัติ
+
+## ADR-009 — จำนวนคอลัมน์คำนวณด้วย JS
+ใช้ ResizeObserver คำนวณคอลัมน์และจำกัด span ไม่ให้เกินจำนวนคอลัมน์ เพราะ CSS grid `span N` ที่มากกว่าจำนวนคอลัมน์จะสร้างคอลัมน์เกินและล้นจอบนมือถือ
+
+## ADR-010 — Markdown renderer เขียนเอง
+แปลง Markdown เป็น React elements โดยตรง (ไม่ใช้ `dangerouslySetInnerHTML`) HTML ในเนื้อหาแสดงเป็นข้อความ ลิงก์อนุญาตเฉพาะ http/https/mailto รองรับ syntax พื้นฐาน (ไม่มีตาราง)
+
+## ADR-011 — Service worker เขียนเอง + สร้างรายการ precache ตอน build
+แทน Workbox เพื่อลด dependency; plugin ใน `vite.config.ts` รู้รายการไฟล์จริงของ build การอัปเดตต้องให้ผู้ใช้กดยืนยัน และไม่ reload อัตโนมัติในการเข้าใช้ครั้งแรก
+
+## ADR-012 — Import แบบแทนที่ทั้งหมด
+การรวมข้อมูล (merge) ทำให้เกิดข้อมูลซ้ำ/ขัดกันได้ง่าย จึงเลือกแทนที่ทั้งหมดพร้อมปุ่ม “สำรองข้อมูลปัจจุบันก่อน” และสรุปจำนวนรายการก่อนยืนยัน
+
+## ADR-013 — Dependencies เพิ่มเติม (dev only)
+`fake-indexeddb` สำหรับ unit tests, `@playwright/test` สำหรับ E2E ไม่มี runtime dependency เพิ่ม (runtime ยังมีเพียง react, react-dom, lucide-react)

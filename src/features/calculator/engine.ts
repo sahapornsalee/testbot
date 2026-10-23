@@ -69,7 +69,13 @@ export function tokenize(input: string): Token[] {
         if (input[i] !== ",") text += input[i];
         i++;
       }
-      if (!/^(\d+\.?\d*|\.\d+)$/.test(text)) throw new EvaluationError("invalid-number");
+      // Scientific notation, e.g. a previous result such as 1e+20.
+      const exponent = /^[eE][+-]?\d+/.exec(input.slice(i));
+      if (exponent) {
+        text += exponent[0];
+        i += exponent[0].length;
+      }
+      if (!/^(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(text)) throw new EvaluationError("invalid-number");
       tokens.push({ type: "number", value: Number(text) });
       continue;
     }

@@ -66,7 +66,15 @@ export function AppShell({ route, query, onQueryChange, notice, children }: Prop
 
   return (
     <div className="app-shell">
-      <a className="skip-link" href="#main-content">
+      {/* Focus the main region directly: a "#main-content" hash would be read as a route. */}
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main-content")?.focus();
+        }}
+      >
         ข้ามไปยังเนื้อหาหลัก
       </a>
 

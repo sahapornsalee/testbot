@@ -1,6 +1,8 @@
 import { useEffect, useId, useState } from "react";
 import { Flag, Pause, Play, RotateCcw } from "lucide-react";
 import { useNow } from "../../hooks/useNow";
+import { usePersistentState } from "../../hooks/usePersistentState";
+import { COUNTDOWN_KEY, parseCountdown, parseStopwatch, STOPWATCH_KEY } from "./persistence";
 import {
   countdownRemaining,
   createCountdown,
@@ -63,7 +65,7 @@ export default function TimerWidget() {
 }
 
 function Stopwatch() {
-  const [state, setState] = useState(initialStopwatch);
+  const [state, setState] = usePersistentState(STOPWATCH_KEY, parseStopwatch, initialStopwatch);
   const running = state.status === "running";
   const now = useNow(50, running);
   const elapsed = stopwatchElapsed(state, now);
@@ -128,31 +130,44 @@ function playBeep() {
 }
 
 function Countdown() {
-  const [state, setState] = useState(() => createCountdown(5 * 60_000));
-  const [parts, setParts] = useState({ hours: "0", minutes: "5", seconds: "0" });
-  const running = state.status === "running";
-  const now = useNow(200, running);
+  const [state, setState] = usePersistentState(COUNTDOWN_KEY, parseCountdown, () => createCountdown(5 * 60_000));
+  const [parts, setParts] = useState(() => {
+    const total = Math.round(state.durationMs / 1000);
+    return {
+      hours: String(Math.floor(total / 3600)),
+      minutes: String(Math.floor((total % 3600) / 60)),
+      seconds: String(total % 60),
+    };
+  });
+  const now = useNow(200, state.status === "running");
   const formId = useId();
 
-  // Derive "finished" from the wall clock (correct even after a background tab).
-  const ticked = tickCountdown(state, now);
-  if (ticked !== state) setState(ticked);
+  // The effective state is derived from the wall clock, so a countdown that
+  // ended while the tab was hidden (or the page was closed) shows as finished.
+  const current = tickCountdown(state, now);
+  const running = current.status === "running";
+  const finished = current.status === "finished";
 
-  const finished = state.status === "finished";
+  // Beep only when the countdown ends while this page is open, not when
+  // restoring an already finished countdown after a reload.
+  const [wasRunning, setWasRunning] = useState(running);
+  const [beeps, setBeeps] = useState(0);
+  if (wasRunning !== running) {
+    setWasRunning(running);
+    if (wasRunning && finished) setBeeps((n) => n + 1);
+  }
   useEffect(() => {
-    if (finished) playBeep();
-  }, [finished]);
+    if (beeps > 0) playBeep();
+  }, [beeps]);
 
   // Clamp in case `now` is a few ms stale right after starting.
-  const remaining = Math.min(countdownRemaining(state, now), state.durationMs);
-  const editable = state.status === "idle" || state.status === "finished";
+  const remaining = Math.min(countdownRemaining(current, now), current.durationMs);
+  const editable = current.status === "idle" || finished;
   const requested = durationFromParts(Number(parts.hours), Number(parts.minutes), Number(parts.seconds));
 
   const start = () => {
-    setState((s) => {
-      const base = s.status === "idle" || s.status === "finished" ? createCountdown(requested) : s;
-      return startCountdown(base, Date.now());
-    });
+    const base = editable ? createCountdown(requested) : current;
+    setState(startCountdown(base, Date.now()));
   };
 
   const field = (key: keyof typeof parts, label: string, max: number) => (
@@ -190,7 +205,7 @@ function Countdown() {
       </form>
       <div className="timer-controls">
         {running ? (
-          <button type="button" className="btn btn-primary" onClick={() => setState((s) => pauseCountdown(s, Date.now()))}>
+          <button type="button" className="btn btn-primary" onClick={() => setState(pauseCountdown(current, Date.now()))}>
             <Pause aria-hidden="true" size={18} /> หยุด
           </button>
         ) : (
@@ -200,14 +215,14 @@ function Countdown() {
             className="btn btn-primary"
             disabled={editable && requested <= 0}
           >
-            <Play aria-hidden="true" size={18} /> {state.status === "paused" ? "ต่อ" : "เริ่ม"}
+            <Play aria-hidden="true" size={18} /> {current.status === "paused" ? "ต่อ" : "เริ่ม"}
           </button>
         )}
         <button
           type="button"
           className="btn"
-          disabled={state.status === "idle"}
-          onClick={() => setState((s) => resetCountdown(s))}
+          disabled={current.status === "idle"}
+          onClick={() => setState(resetCountdown(current))}
         >
           <RotateCcw aria-hidden="true" size={18} /> รีเซ็ต
         </button>

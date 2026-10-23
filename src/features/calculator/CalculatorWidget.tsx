@@ -54,7 +54,7 @@ export default function CalculatorWidget() {
     }
     const text = formatResult(result.value);
     setHistory((prev) => [{ expression, result: text }, ...prev].slice(0, 5));
-    update(text.includes("e") ? String(result.value) : text);
+    update(text);
   };
 
   const press = (key: Key) => {

@@ -1,0 +1,73 @@
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calendar-title {
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.calendar-today {
+  justify-content: space-between;
+}
+
+.calendar-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.calendar-grid th {
+  padding: var(--space-1) 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.calendar-grid th.is-sunday {
+  color: var(--color-danger);
+}
+
+.calendar-grid td {
+  padding: 2px;
+  text-align: center;
+}
+
+.calendar-day {
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 44px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.calendar-day:hover {
+  background: var(--color-surface-muted);
+}
+
+.calendar-day.is-outside {
+  color: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.calendar-day.is-today {
+  border-color: var(--color-primary);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.calendar-day[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.date-calc summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+}

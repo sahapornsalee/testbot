@@ -18,7 +18,7 @@ describe("searchWidgets", () => {
   });
 
   it("matches category labels", () => {
-    expect(ids("เวลาและปฏิทิน").sort()).toEqual(["clock", "timer"]);
+    expect(ids("เวลาและปฏิทิน").sort()).toEqual(["calendar", "clock", "timer"]);
   });
 
   it("requires every term to match", () => {

@@ -7,9 +7,11 @@ export type StorageIssue = "none" | "recovered" | "unavailable" | "write-failed"
 export function usePersistentState<T>(
   key: string,
   parse: Parser<T>,
-  fallback: T,
+  fallback: T | (() => T),
 ): [T, (next: T | ((prev: T) => T)) => void, StorageIssue] {
-  const [initial] = useState(() => readJson(key, parse, fallback));
+  const [initial] = useState(() =>
+    readJson(key, parse, typeof fallback === "function" ? (fallback as () => T)() : fallback),
+  );
   const [value, setValue] = useState<T>(initial.value);
   const [issue, setIssue] = useState<StorageIssue>(
     !initial.available ? "unavailable" : initial.recovered ? "recovered" : "none",
