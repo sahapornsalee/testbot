@@ -1,0 +1,43 @@
+.settings-card {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 640px;
+  padding: var(--space-6);
+}
+
+.settings-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.settings-group legend,
+.settings-heading {
+  width: 100%;
+  margin-bottom: var(--space-2);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.settings-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.settings-option input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
+.settings-help {
+  width: 100%;
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+}

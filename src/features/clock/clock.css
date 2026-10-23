@@ -1,0 +1,22 @@
+.clock {
+  text-align: center;
+}
+
+.clock-time {
+  display: block;
+  font-size: clamp(2.25rem, 8vw, 3rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.clock-date {
+  margin: var(--space-1) 0 0;
+  font-size: 1.05rem;
+}
+
+.clock-zone {
+  margin: var(--space-1) 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
