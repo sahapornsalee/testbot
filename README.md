@@ -10,6 +10,30 @@
 
 > ⚠️ ดาวน์โหลดเฉพาะเนื้อหาที่คุณมีสิทธิ์ ระบบนี้ **ไม่** หลบเลี่ยง DRM, paywall, การล็อกอิน หรือ CAPTCHA และไม่รับประกันว่าดาวน์โหลดได้ทุกเว็บไซต์
 
+## เปิดใช้งานออนไลน์บน GitHub (Codespaces) — ไม่ต้องติดตั้งอะไรในเครื่อง
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sahapornsalee/testbot?quickstart=1)
+
+1. กดปุ่มด้านบน (หรือในหน้า repo: **Code → Codespaces → Create codespace on main**)
+2. รอประมาณ 3–5 นาทีในครั้งแรก ระบบจะติดตั้ง Python, Node.js, FFmpeg, yt-dlp และ build หน้าเว็บให้อัตโนมัติ
+3. เมื่อเสร็จ หน้าเว็บจะเปิดในแท็บใหม่ (ถ้าไม่เปิด: แท็บ **PORTS** → พอร์ต `3000` → กดไอคอนลูกโลก)
+4. ใช้งานได้ทันที — ไฟล์ที่ดาวน์โหลดจะถูกบันทึกลงเครื่องผ่านปุ่ม **บันทึกไฟล์** ของเบราว์เซอร์
+
+คำสั่งใน Terminal ของ Codespace:
+
+```bash
+bash scripts/codespaces/start.sh   # เริ่มใหม่ (ทำอัตโนมัติทุกครั้งที่เปิด codespace)
+bash scripts/codespaces/stop.sh    # หยุด
+tail -f data/logs/api.log          # ดู log
+```
+
+**ความปลอดภัยและค่าใช้จ่าย**
+
+- URL ของ Codespace เป็น **private** — เปิดได้เฉพาะบัญชี GitHub ของคุณ **อย่าเปลี่ยนพอร์ต 3000 เป็น Public** เพราะโหมดนี้ไม่มีระบบ login ใครได้ลิงก์ไปก็ใช้เซิร์ฟเวอร์ดาวน์โหลดของคุณได้
+- บัญชีส่วนตัวได้โควต้าฟรีรายเดือน (เครื่อง 2 core ใช้ได้ประมาณ 60 ชั่วโมง/เดือน) เกินแล้วจะถูกเก็บเงินถ้าตั้ง spending limit ไว้มากกว่า 0 — ปิด codespace เมื่อไม่ใช้ (ระบบหยุดเองหลังไม่ได้ใช้ 30 นาที) ดูโควต้าที่ <https://github.com/settings/billing>
+- Codespace เหมาะกับการใช้งานส่วนตัว ไม่ใช่เซิร์ฟเวอร์สาธารณะ ถ้าต้องการให้คนอื่นใช้ ดู [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+- GitHub Pages ใช้ไม่ได้ เพราะรองรับเฉพาะไฟล์ static รัน API, yt-dlp และ FFmpeg ไม่ได้
+
 ## สิ่งที่ทำได้ในเวอร์ชันนี้ (MVP)
 
 | ความสามารถ | สถานะ |

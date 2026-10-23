@@ -22,7 +22,19 @@ docker compose ps           # both services should be "healthy"
 - On `SIGTERM` uvicorn shuts down gracefully (20 s); unfinished jobs are marked `INTERRUPTED` at
   the next start.
 
-## 3. Online deployment
+## 3. GitHub Codespaces (personal online use)
+
+`.devcontainer/devcontainer.json` defines a Python 3.12 + Node 22 container. On creation
+`scripts/codespaces/setup.sh` installs FFmpeg and all dependencies and builds the UI; on every
+start `scripts/codespaces/start.sh` launches the API on `127.0.0.1:8000` (not forwarded) and the UI
+on port 3000 (forwarded, private), and adds the codespace's forwarded origin
+(`https://$CODESPACE_NAME-3000.$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN`) to `ALLOWED_ORIGINS`.
+Logs are in `data/logs/`. The CI job `Codespaces scripts` runs both scripts on every PR.
+
+Keep port 3000 **private**: the codespace runs with `AUTH_REQUIRED=false`. If you ever need to share
+it, set `AUTH_REQUIRED=true` and `API_TOKENS` as Codespaces secrets first.
+
+## 4. Online deployment (public server)
 
 Online Mode needs a platform that runs long-lived containers with a writable disk, e.g. a VPS with
 Docker, Fly.io, Railway, Render, Google Cloud Run (with a mounted volume), Azure Container Apps.
@@ -78,7 +90,7 @@ Bandwidth is the main cost: every download is fetched by the server and then sen
 interrupts jobs) and cap egress. Some platforms forbid this type of workload in their terms — check
 before deploying. Media sites may rate-limit or block datacenter IPs.
 
-## 4. Frontend-only static hosting
+## 5. Frontend-only static hosting
 
 Not supported: the UI relies on the Next.js server to proxy `/api/v1`. If you host the UI
 elsewhere, you must also route `/api/v1` on the same origin to the API.

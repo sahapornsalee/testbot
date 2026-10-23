@@ -10,6 +10,30 @@ A web app where you paste a link, see what it really is (file type from magic by
 
 > ⚠️ Only download content you have the right to. This tool does **not** bypass DRM, paywalls, logins or CAPTCHAs and cannot guarantee that every website works.
 
+## Run it online on GitHub (Codespaces) — nothing to install locally
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sahapornsalee/testbot?quickstart=1)
+
+1. Click the button (or in the repo: **Code → Codespaces → Create codespace on main**).
+2. The first start takes about 3–5 minutes: Python, Node.js, FFmpeg and yt-dlp are installed and the web UI is built automatically.
+3. The UI opens in a new tab (otherwise: **PORTS** tab → port `3000` → globe icon).
+4. Use it right away; finished files are saved to your computer through the browser's **Save file** button.
+
+Terminal commands inside the codespace:
+
+```bash
+bash scripts/codespaces/start.sh   # (re)start — runs automatically whenever the codespace starts
+bash scripts/codespaces/stop.sh    # stop
+tail -f data/logs/api.log          # logs
+```
+
+**Security and cost**
+
+- The codespace URL is **private**: only your GitHub account can open it. **Do not make port 3000 public** — this mode has no login, so anyone with the link could use your download server.
+- Personal accounts get a free monthly quota (about 60 hours on a 2-core machine). Beyond that you are billed only if your spending limit is above 0. Stop the codespace when you are done (it also stops after 30 idle minutes). See <https://github.com/settings/billing>.
+- A codespace is for personal use, not a public server; for that see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+- GitHub Pages cannot host this: it serves static files only and cannot run the API, yt-dlp or FFmpeg.
+
 ## What the MVP does
 
 | Capability | Status |

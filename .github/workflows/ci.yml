@@ -113,3 +113,39 @@ jobs:
         run: docker compose config --quiet
       - name: Build images (not pushed)
         run: docker compose build
+
+  codespaces:
+    name: Codespaces scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate devcontainer.json
+        run: node -e "const s=require('fs').readFileSync('.devcontainer/devcontainer.json','utf8'); JSON.parse(s.replace(/^\s*\/\/.*$/gm,''))"
+      - name: Run setup and start like a codespace would
+        env:
+          CODESPACE_NAME: ci-check
+          GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: app.github.dev
+        run: |
+          bash scripts/codespaces/setup.sh
+          bash scripts/codespaces/start.sh
+      - name: Check the forwarded origin is accepted and foreign origins are not
+        run: |
+          ok=$(curl -s -H 'X-UD-Client: web' -H 'Origin: https://ci-check-3000.app.github.dev' \
+            -H 'Content-Type: application/json' -d '{"url":"http://169.254.169.254/"}' \
+            http://127.0.0.1:3000/api/v1/inspect)
+          bad=$(curl -s -H 'X-UD-Client: web' -H 'Origin: https://evil.example' \
+            -H 'Content-Type: application/json' -d '{"url":"http://169.254.169.254/"}' \
+            http://127.0.0.1:3000/api/v1/inspect)
+          echo "$ok"; echo "$bad"
+          echo "$ok" | grep -q BLOCKED_DESTINATION
+          echo "$bad" | grep -q FORBIDDEN_ORIGIN
+          curl -sf http://127.0.0.1:3000/api/v1/health | grep -q '"ffmpeg":"'
+      - name: Stop services
+        if: always()
+        run: bash scripts/codespaces/stop.sh
