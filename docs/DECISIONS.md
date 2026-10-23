@@ -41,3 +41,15 @@ Stopwatch/Countdown เก็บเวลาเริ่ม/เวลาสิ�
 
 ## ADR-013 — Dependencies เพิ่มเติม (dev only)
 `fake-indexeddb` สำหรับ unit tests, `@playwright/test` สำหรับ E2E ไม่มี runtime dependency เพิ่ม (runtime ยังมีเพียง react, react-dom, lucide-react)
+
+## ADR-014 — ใช้ `qrcode-generator` สำหรับ QR Code
+การเข้ารหัส QR (Reed–Solomon, mask, version 1–40) ซับซ้อนและผิดพลาดง่ายถ้าเขียนเอง ไลบรารีนี้ใช้ MIT ไม่มี dependency ต่อ ~25 KB และโหลดแบบ lazy เฉพาะหน้า QR เราแปลงข้อความเป็น UTF-8 เองก่อนส่งเข้าไลบรารี และวาดเป็น SVG ด้วย React (ไม่ใช้ HTML string จากไลบรารี)
+
+## ADR-015 — IndexedDB v2 เพิ่ม store `expenses`
+รายรับรายจ่ายโตได้เรื่อย ๆ จึงเก็บใน IndexedDB การอัปเกรดสร้างเฉพาะ store ที่ขาด ข้อมูล v1 อยู่ครบ (มี unit test ยืนยัน)
+
+## ADR-016 — ข้อมูลเครื่องมือขนาดเล็กเก็บใน LocalStorage แบบมี version
+นิสัย วันสำคัญ ตัวนับ ฯลฯ มีขนาดเล็กและอ่านพร้อมกันทั้งชุด จึงใช้ `usePersistentState` + parser ต่อเครื่องมือ และลงทะเบียนใน `TOOL_STORES` เพื่อให้สำรอง/นำเข้า/ลบได้ครบ
+
+## ADR-017 — ตัวสุ่มใช้ `crypto.getRandomValues`
+รหัสผ่านและการสุ่มทั้งหมดใช้ตัวสุ่มที่ปลอดภัยพร้อม rejection sampling เพื่อไม่ให้เกิด modulo bias

@@ -1,14 +1,3 @@
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.calendar-title {
-  font-size: 1.1rem;
-  text-align: center;
-}
-
 .calendar-today {
   justify-content: space-between;
 }

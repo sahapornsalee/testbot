@@ -134,3 +134,104 @@
   border: 0;
   border-top: 1px solid var(--color-border);
 }
+
+.strength-meter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.strength-meter span {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-surface-muted);
+}
+
+.strength-meter[data-level="0"] span:nth-child(-n + 1) {
+  background: var(--color-danger);
+}
+
+.strength-meter[data-level="1"] span:nth-child(-n + 2) {
+  background: var(--color-favorite);
+}
+
+.strength-meter[data-level="2"] span:nth-child(-n + 3),
+.strength-meter[data-level="3"] span {
+  background: var(--color-success);
+}
+
+.password-output {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  overflow-wrap: anywhere;
+}
+
+.qr-box {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+}
+
+.qr-box .qr-image {
+  width: min(100%, 280px);
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.color-swatch {
+  height: 72px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.contrast-sample {
+  display: grid;
+  place-items: center;
+  min-height: 56px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+.diff-view {
+  max-height: 420px;
+  margin: 0;
+  padding: var(--space-2) 0;
+  overflow: auto;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.diff-line {
+  display: grid;
+  grid-template-columns: 3.5em 3.5em 1.5em 1fr;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.diff-line span:not(:last-child) {
+  color: var(--color-text-muted);
+  text-align: right;
+  padding-right: var(--space-2);
+  user-select: none;
+}
+
+.diff-line.added {
+  background: color-mix(in srgb, var(--color-success) 18%, transparent);
+}
+
+.diff-line.removed {
+  background: color-mix(in srgb, var(--color-danger) 18%, transparent);
+}
+
+.hash-row {
+  display: grid;
+  gap: 2px;
+}
+
+.hash-row code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}

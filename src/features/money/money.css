@@ -1,0 +1,131 @@
+.money-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.money-table th,
+.money-table td {
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.money-table th:first-child,
+.money-table td:first-child {
+  text-align: left;
+}
+
+.money-table th {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.table-scroll {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.stat-grid > div {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.stat-grid dt {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.stat-grid dd {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.amount-income {
+  color: var(--color-success);
+}
+
+.amount-expense {
+  color: var(--color-danger);
+}
+
+.bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-surface-muted);
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.category-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px var(--space-2);
+  font-size: 0.9rem;
+}
+
+.category-row .bar {
+  grid-column: 1 / -1;
+}
+
+.expense-list {
+  display: grid;
+  gap: 2px;
+  max-height: 360px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.expense-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.expense-item:hover {
+  background: var(--color-surface-muted);
+}
+
+.expense-item small {
+  display: block;
+  color: var(--color-text-muted);
+}
+
+.cheapest {
+  background: color-mix(in srgb, var(--color-success) 15%, transparent);
+}
+
+.price-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+@container widget (max-width: 420px) {
+  .price-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}

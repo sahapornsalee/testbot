@@ -1,6 +1,6 @@
 # Project Status
 
-อัปเดตล่าสุด: 2026-10-23 · เวอร์ชัน 1.0.0 · ระยะปัจจุบัน: พร้อมเผยแพร่ (รอผู้ใช้อนุมัติ L4)
+อัปเดตล่าสุด: 2026-10-23 · เวอร์ชัน 1.1.0 · เผยแพร่แล้วที่ https://sahapornsalee.github.io/testbot/
 
 ## งาน
 
@@ -16,7 +16,9 @@
 | TASK-009 | JSON Markdown UUID ข้อความ | L1 | DONE |
 | TASK-010 | PWA offline update flow | L2 | DONE |
 | TASK-011 | E2E tests + CI gate ก่อน deploy | L2 | DONE |
-| TASK-004 | เปิด GitHub Pages และ deploy จริง | L4 | BLOCKED — รอผู้ใช้ merge เข้า main และตั้ง Settings → Pages → Source: GitHub Actions |
+| TASK-004 | เปิด GitHub Pages และ deploy จริง | L4 | DONE (ผู้ใช้เปิด Pages และ merge PR #3) |
+| TASK-012 | Dashboard การ์ดสูงเท่ากันและแถวเต็ม | L1 | DONE (PR #4) |
+| TASK-013 | เครื่องมือออฟไลน์ 20 ตัว + IndexedDB v2 + backup ขยาย | L2 | REVIEW — รอ merge |
 
 ## ผลการตรวจสอบล่าสุด (รันจริงในเครื่องพัฒนา)
 
@@ -36,4 +38,5 @@
 - Drag-and-drop ใช้ได้กับเมาส์ บนจอสัมผัส/คีย์บอร์ดใช้ปุ่ม ↑↓ แทน
 - E2E และ offline ทดสอบบน Chromium เท่านั้น ยังไม่ได้ทดสอบ Safari/Firefox จริง
 - ยังไม่ได้ทดสอบกับ screen reader จริง (ตรวจ accessible name/role ผ่าน tests)
-- ยังไม่ได้ deploy จริง จึงยังไม่ได้ตรวจ URL ที่เผยแพร่
+- ผมไม่สามารถเปิด URL ที่เผยแพร่จากเครื่องพัฒนาได้ (เครือข่ายถูกจำกัด) ผู้ใช้ยืนยันด้วยภาพหน้าจอว่าเว็บขึ้นแล้ว
+- เบอร์ฉุกเฉินเป็นข้อมูลคงที่ในโค้ด ควรตรวจทานเป็นระยะ

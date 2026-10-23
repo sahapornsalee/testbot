@@ -24,6 +24,8 @@ Offline         public/manifest.webmanifest, pwa/sw-template.js → dist/sw.js
 | `src/features/calculator/` `converter/` | เครื่องคิดเลข แปลงหน่วย เปอร์เซ็นต์ |
 | `src/features/tasks/` `notes/` | รายการงาน บันทึก |
 | `src/features/dev-tools/` | JSON, Markdown, UUID, ข้อความ |
+| `src/features/money/` | รายรับรายจ่าย หารบิล ผ่อน เงินเป็นตัวอักษร เทียบราคา |
+| `src/features/life/` | นิสัย สุขภาพ ฉุกเฉิน สุ่ม ตัวนับ เวลาโลก Pomodoro วันสำคัญ อายุ |
 | `src/features/settings/` | ธีม รูปแบบเวลา backup/import/export |
 | `src/styles/` | design tokens และ global styles |
 | `tests/e2e/` | Playwright end-to-end tests |
@@ -54,14 +56,16 @@ Hash routing (`#/`, `#/tools/<id>`, `#/settings`) เพราะ GitHub Pages �
 | การตั้งค่า | LocalStorage | `productivity-hub:settings` | `{ version: 1, theme, timeFormat }` |
 | Dashboard | LocalStorage | `productivity-hub:layout` | `{ version: 2, columns, items }` |
 | Timer | LocalStorage | `productivity-hub:timer:stopwatch` / `:countdown` | state machine ที่อิง timestamp |
-| งาน | IndexedDB `productivity-hub` v1 | `tasks` | `{ id, title, done, order, createdAt, updatedAt }` |
-| บันทึก | IndexedDB `productivity-hub` v1 | `notes` | `{ id, title, body, createdAt, updatedAt }` |
+| งาน | IndexedDB `productivity-hub` v2 | `tasks` | `{ id, title, done, order, createdAt, updatedAt }` |
+| บันทึก | IndexedDB `productivity-hub` v2 | `notes` | `{ id, title, body, createdAt, updatedAt }` |
+| รายรับรายจ่าย | IndexedDB `productivity-hub` v2 | `expenses` | `{ id, date, type, amount, category, note, createdAt, updatedAt }` |
+| นิสัย / วันสำคัญ / ตัวนับ / Pomodoro / เวลาโลก / ข้อมูลฉุกเฉิน | LocalStorage | `productivity-hub:habits` `:events` `:counters` `:pomodoro` `:world-clock` `:emergency` | `{ version: 1, … }` แต่ละตัวมี parser |
 
 ทุกค่าที่อ่านกลับผ่าน parser ตรวจชนิด record ที่เสียจะถูกข้ามและแจ้งผู้ใช้ การเขียนที่ล้มเหลวแสดงข้อความเตือน
 
 **Migration**: v0.1.0 เก็บ `productivity-hub:favorites` `{ version: 1, ids }` — เมื่อไม่มี layout ระบบสร้าง layout จาก favorites แล้วลบ key เดิมเมื่อผู้ใช้แก้ layout ครั้งแรก IndexedDB เพิ่ม migration ได้ใน `onupgradeneeded` (`src/data/db.ts`)
 
-**Backup** (`src/features/settings/backup.ts`): `{ app: "productivity-hub", formatVersion: 1, exportedAt, settings, layout, tasks, notes }` นำเข้าแบบแทนที่ทั้งหมด ตรวจขนาด (≤10 MB) นามสกุล เวอร์ชัน และทุก record ก่อนเขียน
+**Backup** (`src/features/settings/backup.ts`): `{ app: "productivity-hub", formatVersion: 1, exportedAt, settings, layout, tasks, notes, expenses, toolData }` — `expenses`/`toolData` เพิ่มใน 1.1.0 ถ้าไฟล์ไม่มีสองช่องนี้ ข้อมูลส่วนนั้นในเครื่องจะไม่ถูกแตะ; รายการเครื่องมือที่สำรองอยู่ใน `TOOL_STORES` นำเข้าแบบแทนที่ทั้งหมด ตรวจขนาด (≤10 MB) นามสกุล เวอร์ชัน และทุก record ก่อนเขียน
 
 ## PWA / Offline
 

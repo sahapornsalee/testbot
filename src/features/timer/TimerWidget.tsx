@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { Flag, Pause, Play, RotateCcw } from "lucide-react";
 import { useNow } from "../../hooks/useNow";
+import { playBeep } from "../../lib/sound";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import { COUNTDOWN_KEY, parseCountdown, parseStopwatch, STOPWATCH_KEY } from "./persistence";
 import {
@@ -108,25 +109,6 @@ function Stopwatch() {
       )}
     </div>
   );
-}
-
-function playBeep() {
-  try {
-    const AudioCtx = window.AudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.8);
-    osc.onended = () => void ctx.close();
-  } catch {
-    // Sound is optional; the visual alert is always shown.
-  }
 }
 
 function Countdown() {
