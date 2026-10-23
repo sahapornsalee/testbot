@@ -14,12 +14,15 @@
 - Route parameter รับเฉพาะ `[a-z0-9-]`
 - ErrorBoundary log เฉพาะข้อความ error ไม่ log ข้อมูลผู้ใช้
 - GitHub Actions: สิทธิ์เริ่มต้น `contents: read`; เฉพาะ job deploy ได้ `pages: write` และ `id-token: write`, deploy เฉพาะจาก `main` หลังผ่านทุก check
-- Runtime dependency มี 4 ตัว (react, react-dom, lucide-react, qrcode-generator); `npm audit` ไม่พบช่องโหว่ ณ วันที่ release
+- Runtime dependency มี 5 ตัว (react, react-dom, lucide-react, qrcode-generator, tesseract.js); `npm audit` ไม่พบช่องโหว่ ณ วันที่ release
 
 - รหัสผ่านสร้างด้วย `crypto.getRandomValues` และไม่ถูกบันทึก; Hash คำนวณด้วย Web Crypto ในเครื่อง ไฟล์ไม่ถูกอัปโหลด
 - CSV ที่ส่งออกจากรายรับรายจ่าย ป้องกัน formula injection (ค่าที่ขึ้นต้นด้วย `= + - @` ถูกนำหน้าด้วย `'`)
 - ข้อมูลทางการแพทย์ในเครื่องมือข้อมูลฉุกเฉินเก็บใน LocalStorage ของเครื่องนี้เท่านั้น และมีคำเตือนเรื่องอุปกรณ์ที่ใช้ร่วมกัน
 - QR Code วาดเป็น SVG ผ่าน React ไม่ใช้ HTML string จากไลบรารี
+
+- เครื่องมือแปลงรูปเป็นข้อความ: รูปถูกประมวลผลในเครื่อง ไม่อัปโหลด; OCR engine โหลดจากโดเมนของเราเอง (`ocr/<version>/`) ไม่ใช่ CDN ภายนอก
+- ข้อความที่ได้จากรูปอาจมีข้อมูลส่วนตัว (เช่น สลิปโอนเงิน) ผู้ใช้เป็นผู้ตัดสินใจคัดลอกไปวางที่อื่นเอง
 
 ## ข้อจำกัดที่ต้องเข้าใจ
 LocalStorage และ IndexedDB ไม่ได้เข้ารหัส สคริปต์อันตรายหรือส่วนขยายเบราว์เซอร์อาจอ่านได้ ข้อมูลอาจถูกล้างโดยเบราว์เซอร์ และไฟล์สำรองเป็นข้อความธรรมดา อย่าเก็บรหัสผ่านหรือข้อมูลลับในบันทึก และอย่าใช้บนอุปกรณ์สาธารณะ
