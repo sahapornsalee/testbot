@@ -45,7 +45,8 @@ describe("datetime", () => {
     expect(monthName(10, "th")).toBe("ตุลาคม");
     expect(monthName(10, "en-GB")).toBe("October");
     expect(weekdayNames("en-GB")).toEqual(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
-    expect(weekdayNames("th")[0]).toBe("อา.");
+    expect(weekdayNames("th")).toEqual(["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."]);
+    expect(weekdayNames("th", 1)[0]).toBe("จ.");
   });
 
   it("converts display years", () => {

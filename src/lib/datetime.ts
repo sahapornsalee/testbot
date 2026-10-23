@@ -96,12 +96,21 @@ export function monthName(month: number, locale: DateLocale, style: "long" | "sh
   return new Intl.DateTimeFormat(localeTag(locale), { month: style, timeZone: "UTC" }).format(Date.UTC(2000, month - 1, 1, 12));
 }
 
+/**
+ * Standard Thai weekday abbreviations. Fixed here because browsers ship
+ * different ICU data: some abbreviate Sunday as "อา.", others print the full
+ * "อาทิตย์", which would make calendar headers differ between devices.
+ */
+const THAI_WEEKDAYS = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
+
 /** Short weekday names starting on Sunday (0) or Monday (1). */
 export function weekdayNames(locale: DateLocale, weekStartsOn: 0 | 1 = 0): string[] {
-  // 1 January 2023 was a Sunday.
-  return Array.from({ length: 7 }, (_, i) =>
-    new Intl.DateTimeFormat(localeTag(locale), { weekday: "short", timeZone: "UTC" }).format(Date.UTC(2023, 0, 1 + ((i + weekStartsOn) % 7), 12)),
-  );
+  return Array.from({ length: 7 }, (_, i) => {
+    const day = (i + weekStartsOn) % 7;
+    if (locale === "th") return THAI_WEEKDAYS[day] as string;
+    // 1 January 2023 was a Sunday.
+    return new Intl.DateTimeFormat(localeTag(locale), { weekday: "short", timeZone: "UTC" }).format(Date.UTC(2023, 0, 1 + day, 12));
+  });
 }
 
 export function formatTime(date: Date, config: DateTimeConfig, hour12: boolean, withSeconds = true): string {
