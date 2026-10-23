@@ -4,6 +4,7 @@ import { AppShell } from "../components/layout/AppShell";
 import { NotFound } from "../components/NotFound";
 import { Dashboard } from "../features/dashboard/Dashboard";
 import { LayoutProvider, useLayout } from "../features/dashboard/LayoutContext";
+import { RemindersProvider } from "../features/organize/RemindersContext";
 import { SearchResults } from "../features/dashboard/SearchResults";
 import { ToolPage } from "../features/dashboard/ToolPage";
 import { SettingsPage } from "../features/settings/SettingsPage";
@@ -80,7 +81,9 @@ export function App() {
   return (
     <SettingsProvider>
       <LayoutProvider>
-        <Shell />
+        <RemindersProvider>
+          <Shell />
+        </RemindersProvider>
       </LayoutProvider>
     </SettingsProvider>
   );
