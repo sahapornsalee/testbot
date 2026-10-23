@@ -6,8 +6,18 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 if ! command -v ffmpeg >/dev/null 2>&1; then
   echo "==> Installing FFmpeg"
   SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO="sudo"
-  $SUDO apt-get update -y
-  $SUDO apt-get install -y --no-install-recommends ffmpeg
+  # The devcontainer Python image ships a Yarn apt source whose signing key has expired,
+  # which makes `apt-get update` fail. Yarn is not needed here, so drop that source.
+  for list in /etc/apt/sources.list.d/*.list; do
+    if [ -f "$list" ] && grep -q "dl.yarnpkg.com" "$list"; then
+      $SUDO rm -f "$list"
+    fi
+  done
+  # FFmpeg is optional (only needed to merge audio into video-only formats), so an apt
+  # problem must not stop the rest of the setup.
+  if ! { $SUDO apt-get update -y && $SUDO apt-get install -y --no-install-recommends ffmpeg; }; then
+    echo "!! FFmpeg could not be installed; continuing without it (audio merging disabled)" >&2
+  fi
 fi
 
 echo "==> Installing API dependencies"
