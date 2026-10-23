@@ -2,7 +2,10 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Pencil, Trash2 } from "lucide-react";
 import { expenseRepository, type Expense, type ExpenseType } from "../../data/models";
 import { useCollection } from "../../hooks/useCollection";
-import { addMonths, monthName, toIsoDate, today } from "../calendar/dates";
+import { DateInput } from "../../components/DateInput";
+import { displayYear, monthName, type CalendarDate } from "../../lib/datetime";
+import { addMonths, toIsoDate } from "../calendar/dates";
+import { useDateTime } from "../settings/SettingsContext";
 import { downloadText } from "../settings/backup";
 import {
   EXPENSE_CATEGORIES,
@@ -16,8 +19,8 @@ import {
 } from "./expenses";
 import "./money.css";
 
-const emptyDraft = (type: ExpenseType = "expense"): ExpenseDraft => ({
-  date: toIsoDate(today()),
+const emptyDraft = (today: CalendarDate, type: ExpenseType = "expense"): ExpenseDraft => ({
+  date: toIsoDate(today),
   type,
   amount: "",
   category: type === "expense" ? (EXPENSE_CATEGORIES[0] as string) : (INCOME_CATEGORIES[0] as string),
@@ -26,9 +29,10 @@ const emptyDraft = (type: ExpenseType = "expense"): ExpenseDraft => ({
 
 export default function ExpensesWidget() {
   const { status, items, error, save, remove } = useCollection(expenseRepository);
+  const { locale, today } = useDateTime();
   const now = today();
   const [view, setView] = useState({ year: now.year, month: now.month });
-  const [draft, setDraft] = useState<ExpenseDraft>(() => emptyDraft());
+  const [draft, setDraft] = useState<ExpenseDraft>(() => emptyDraft(now));
   const [editing, setEditing] = useState<Expense | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -49,7 +53,7 @@ export default function ExpensesWidget() {
     save(result.value);
     setEditing(null);
     setFormError(null);
-    setDraft({ ...emptyDraft(draft.type), date: draft.date });
+    setDraft({ ...emptyDraft(now, draft.type), date: draft.date });
   };
 
   return (
@@ -88,10 +92,7 @@ export default function ExpensesWidget() {
               ))}
             </select>
           </label>
-          <label className="field">
-            วันที่
-            <input className="input" type="date" value={draft.date} onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))} />
-          </label>
+          <DateInput label="วันที่" value={draft.date} onChange={(date) => setDraft((d) => ({ ...d, date }))} locale={locale} />
         </div>
         <label className="field">
           หมายเหตุ
@@ -112,7 +113,7 @@ export default function ExpensesWidget() {
               className="btn"
               onClick={() => {
                 setEditing(null);
-                setDraft(emptyDraft());
+                setDraft(emptyDraft(now));
               }}
             >
               ยกเลิก
@@ -126,7 +127,7 @@ export default function ExpensesWidget() {
           <ChevronLeft aria-hidden="true" />
         </button>
         <h3 className="calendar-title" aria-live="polite">
-          {monthName(view.month)} {view.year + 543}
+          {monthName(view.month, locale)} {displayYear(view.year, locale)}
         </h3>
         <button type="button" className="icon-btn" aria-label="เดือนถัดไป" onClick={() => setView((v) => addMonths(v.year, v.month, 1))}>
           <ChevronRight aria-hidden="true" />

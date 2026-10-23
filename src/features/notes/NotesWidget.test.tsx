@@ -2,7 +2,15 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { noteRepository } from "../../data/models";
+import { SettingsProvider } from "../settings/SettingsContext";
 import NotesWidget from "./NotesWidget";
+
+const renderNotes = () =>
+  render(
+    <SettingsProvider>
+      <NotesWidget />
+    </SettingsProvider>,
+  );
 
 afterEach(async () => {
   await noteRepository.replaceAll([]);
@@ -11,7 +19,7 @@ afterEach(async () => {
 describe("NotesWidget", () => {
   it("creates a note, autosaves it, finds it by search, and deletes it", async () => {
     const user = userEvent.setup();
-    const { unmount } = render(<NotesWidget />);
+    const { unmount } = renderNotes();
     await user.click(await screen.findByRole("button", { name: "ใหม่" }));
     await user.type(screen.getByRole("textbox", { name: "ชื่อบันทึก" }), "ประชุมทีม");
     await user.type(screen.getByRole("textbox", { name: "เนื้อหาบันทึก" }), "สรุปงานไตรมาส");
@@ -26,7 +34,7 @@ describe("NotesWidget", () => {
     expect(screen.getByText("บันทึกอัตโนมัติแล้ว")).toBeInTheDocument();
 
     unmount();
-    render(<NotesWidget />);
+    renderNotes();
     await user.type(await screen.findByRole("searchbox", { name: "ค้นหาบันทึก" }), "ไตรมาส");
     await user.click(screen.getByRole("button", { name: /ประชุมทีม/ }));
     expect(screen.getByRole("textbox", { name: "เนื้อหาบันทึก" })).toHaveValue("สรุปงานไตรมาส");
@@ -38,7 +46,7 @@ describe("NotesWidget", () => {
 
   it("saves pending edits when switching away before the autosave delay", async () => {
     const user = userEvent.setup();
-    const { unmount } = render(<NotesWidget />);
+    const { unmount } = renderNotes();
     await user.click(await screen.findByRole("button", { name: "ใหม่" }));
     await user.type(screen.getByRole("textbox", { name: "เนื้อหาบันทึก" }), "ด่วน");
     unmount();

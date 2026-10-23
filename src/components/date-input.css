@@ -1,0 +1,32 @@
+.date-input {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.date-input legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+}
+
+.date-input-row {
+  display: grid;
+  grid-template-columns: minmax(56px, 0.7fr) minmax(0, 1.6fr) minmax(70px, 0.9fr);
+  gap: var(--space-1);
+}
+
+.date-input-row .input {
+  min-width: 0;
+  padding-inline: var(--space-2);
+  color: var(--color-text);
+}
+
+.date-input-year {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

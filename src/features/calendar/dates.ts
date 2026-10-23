@@ -1,11 +1,8 @@
 /** Calendar-date helpers. Dates are plain {year, month, day} to avoid time zone bugs. */
 
-export interface CalendarDate {
-  year: number;
-  /** 1-12 */
-  month: number;
-  day: number;
-}
+import type { CalendarDate } from "../../lib/datetime";
+
+export type { CalendarDate };
 
 const DAY_MS = 86_400_000;
 
@@ -16,10 +13,6 @@ export function toUtcMs(date: CalendarDate): number {
 export function fromUtcMs(ms: number): CalendarDate {
   const d = new Date(ms);
   return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
-}
-
-export function today(now = new Date()): CalendarDate {
-  return { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() };
 }
 
 export function sameDate(a: CalendarDate, b: CalendarDate): boolean {
@@ -86,24 +79,3 @@ export function diffParts(a: CalendarDate, b: CalendarDate): { years: number; mo
   return { years: Math.floor(months / 12), months: months % 12, days };
 }
 
-export function monthName(month: number, style: "long" | "short" = "long"): string {
-  return new Intl.DateTimeFormat("th-TH", { month: style, timeZone: "UTC" }).format(Date.UTC(2000, month - 1, 1));
-}
-
-export function weekdayNames(weekStartsOn: 0 | 1 = 0): string[] {
-  // 2023-01-01 was a Sunday.
-  return Array.from({ length: 7 }, (_, i) =>
-    new Intl.DateTimeFormat("th-TH", { weekday: "short", timeZone: "UTC" }).format(
-      Date.UTC(2023, 0, 1 + ((i + weekStartsOn) % 7)),
-    ),
-  );
-}
-
-export function formatThaiDate(date: CalendarDate): string {
-  return new Intl.DateTimeFormat("th-TH", { dateStyle: "full", timeZone: "UTC" }).format(toUtcMs(date));
-}
-
-/** Buddhist Era year shown alongside the Gregorian year. */
-export function buddhistYear(year: number): number {
-  return year + 543;
-}

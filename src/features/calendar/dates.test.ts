@@ -2,15 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   addMonths,
-  buddhistYear,
   daysBetween,
   daysInMonth,
   diffParts,
   monthGrid,
-  monthName,
   parseIsoDate,
   toIsoDate,
-  weekdayNames,
 } from "./dates";
 
 const d = (year: number, month: number, day: number) => ({ year, month, day });
@@ -62,10 +59,4 @@ describe("dates", () => {
     expect(diffParts(d(2026, 10, 23), d(2000, 1, 15))).toEqual({ years: 26, months: 9, days: 8 });
   });
 
-  it("names months and weekdays in Thai", () => {
-    expect(monthName(10)).toBe("ตุลาคม");
-    expect(weekdayNames()[0]).toContain("อา");
-    expect(weekdayNames(1)[0]).toContain("จ");
-    expect(buddhistYear(2026)).toBe(2569);
-  });
 });

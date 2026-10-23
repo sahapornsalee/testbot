@@ -1,29 +1,18 @@
 import { useState, type KeyboardEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  addDays,
-  addMonths,
-  buddhistYear,
-  daysBetween,
-  diffParts,
-  formatThaiDate,
-  monthGrid,
-  monthName,
-  parseIsoDate,
-  sameDate,
-  toIsoDate,
-  today,
-  weekdayNames,
-  type CalendarDate,
-} from "./dates";
+import { DateInput } from "../../components/DateInput";
+import { displayYear, formatDate, monthName, weekdayNames, type DateLocale } from "../../lib/datetime";
+import { useDateTime } from "../settings/SettingsContext";
+import { addDays, addMonths, daysBetween, diffParts, monthGrid, parseIsoDate, sameDate, toIsoDate, type CalendarDate } from "./dates";
 import "./calendar.css";
 
 export default function CalendarWidget() {
-  const [now] = useState(() => today());
+  const { locale, today } = useDateTime();
+  const now = today();
   const [view, setView] = useState({ year: now.year, month: now.month });
   const [selected, setSelected] = useState<CalendarDate>(now);
   const grid = monthGrid(view.year, view.month);
-  const weekdays = weekdayNames();
+  const weekdays = weekdayNames(locale);
 
   const go = (delta: number) => setView((v) => addMonths(v.year, v.month, delta));
 
@@ -48,8 +37,8 @@ export default function CalendarWidget() {
           <ChevronLeft aria-hidden="true" />
         </button>
         <h3 className="calendar-title" aria-live="polite">
-          {monthName(view.month)} {buddhistYear(view.year)}
-          <span className="muted small"> ({view.year})</span>
+          {monthName(view.month, locale)} {displayYear(view.year, locale)}
+          {locale === "th" && <span className="muted small"> (ค.ศ. {view.year})</span>}
         </h3>
         <button type="button" className="icon-btn" aria-label="เดือนถัดไป" onClick={() => go(1)}>
           <ChevronRight aria-hidden="true" />
@@ -66,9 +55,9 @@ export default function CalendarWidget() {
         >
           วันนี้
         </button>
-        <span className="muted small">{formatThaiDate(selected)}</span>
+        <span className="muted small">{formatDate(selected, locale)}</span>
       </div>
-      <table className="calendar-grid" role="grid" aria-label={`ปฏิทิน ${monthName(view.month)} ${buddhistYear(view.year)}`}>
+      <table className="calendar-grid" role="grid" aria-label={`ปฏิทิน ${monthName(view.month, locale)} ${displayYear(view.year, locale)}`}>
         <thead>
           <tr>
             {weekdays.map((name, i) => (
@@ -91,7 +80,7 @@ export default function CalendarWidget() {
                       className={`calendar-day ${inMonth ? "" : "is-outside"} ${sameDate(date, now) ? "is-today" : ""}`}
                       aria-pressed={isSelected}
                       aria-current={sameDate(date, now) ? "date" : undefined}
-                      aria-label={formatThaiDate(date)}
+                      aria-label={formatDate(date, locale)}
                       tabIndex={isSelected ? 0 : -1}
                       onClick={() => setSelected(date)}
                     >
@@ -104,12 +93,12 @@ export default function CalendarWidget() {
           ))}
         </tbody>
       </table>
-      <DateCalculator initial={selected} />
+      <DateCalculator initial={now} locale={locale} />
     </div>
   );
 }
 
-function DateCalculator({ initial }: { initial: CalendarDate }) {
+function DateCalculator({ initial, locale }: { initial: CalendarDate; locale: DateLocale }) {
   const [start, setStart] = useState(toIsoDate(initial));
   const [end, setEnd] = useState(toIsoDate(addDays(initial, 30)));
   const [offset, setOffset] = useState("30");
@@ -123,14 +112,8 @@ function DateCalculator({ initial }: { initial: CalendarDate }) {
       <summary>คำนวณวันที่</summary>
       <div className="stack">
         <div className="field-row">
-          <label className="field">
-            ตั้งแต่วันที่
-            <input className="input" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
-          </label>
-          <label className="field">
-            ถึงวันที่
-            <input className="input" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
-          </label>
+          <DateInput label="ตั้งแต่วันที่" value={start} onChange={setStart} locale={locale} />
+          <DateInput label="ถึงวันที่" value={end} onChange={setEnd} locale={locale} />
         </div>
         <div className="result-box" role="status">
           {from && to ? (
@@ -164,7 +147,7 @@ function DateCalculator({ initial }: { initial: CalendarDate }) {
         <div className="result-box" role="status">
           {from && offsetValid ? (
             <span>
-              ผลลัพธ์: <strong>{formatThaiDate(addDays(from, days))}</strong>
+              ผลลัพธ์: <strong>{formatDate(addDays(from, days), locale)}</strong>
             </span>
           ) : (
             <span className="error-text">กรุณาใส่จำนวนวันเป็นจำนวนเต็ม (ไม่เกิน ±100,000)</span>

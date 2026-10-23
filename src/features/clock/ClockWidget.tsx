@@ -1,20 +1,22 @@
 import { useNow } from "../../hooks/useNow";
-import { useSettings } from "../settings/SettingsContext";
-import { deviceTimeZone, formatLongDate, formatTime, formatUtcOffset } from "./clock";
+import { formatLongDate, formatTime, formatUtcOffset, zoneOffsetMinutes } from "../../lib/datetime";
+import { useDateTime, useSettings } from "../settings/SettingsContext";
+import { zoneDisplayName } from "./clock";
 import "./clock.css";
 
 export default function ClockWidget() {
   const now = new Date(useNow(1000));
   const { settings } = useSettings();
+  const dateTime = useDateTime();
 
   return (
     <div className="clock">
       <time className="clock-time" dateTime={now.toISOString()}>
-        {formatTime(now, settings.timeFormat)}
+        {formatTime(now, dateTime, settings.timeFormat === "12h")}
       </time>
-      <p className="clock-date">{formatLongDate(now)}</p>
+      <p className="clock-date">{formatLongDate(now, dateTime)}</p>
       <p className="clock-zone">
-        {deviceTimeZone()} · {formatUtcOffset(-now.getTimezoneOffset())}
+        {zoneDisplayName(dateTime.timeZone)} · {formatUtcOffset(zoneOffsetMinutes(dateTime.timeZone, now))}
       </p>
     </div>
   );

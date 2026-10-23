@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { Flame, Trash2 } from "lucide-react";
 import { usePersistentState } from "../../hooks/usePersistentState";
-import { sameDate, today, toIsoDate, weekdayNames } from "../calendar/dates";
+import { weekdayNames } from "../../lib/datetime";
+import { sameDate, toIsoDate } from "../calendar/dates";
+import { useDateTime } from "../settings/SettingsContext";
 import { addHabit, currentStreak, EMPTY_HABITS, HABITS_KEY, lastDays, longestStreak, MAX_HABITS, parseHabits, removeHabit, toggleDay } from "./habits";
 import "./life.css";
 
 export default function HabitsWidget() {
   const [data, setData] = usePersistentState(HABITS_KEY, parseHabits, EMPTY_HABITS);
   const [name, setName] = useState("");
+  const { locale, today } = useDateTime();
   const now = today();
   const days = lastDays(now, 7);
-  const weekday = weekdayNames();
+  const weekday = weekdayNames(locale);
 
   return (
     <div className="stack">

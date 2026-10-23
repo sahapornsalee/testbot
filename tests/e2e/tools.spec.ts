@@ -20,8 +20,13 @@ test("calculator, converter and percentage give correct answers", async ({ page 
 
 test("calendar computes days between dates", async ({ page }) => {
   await page.goto("./#/tools/calendar");
-  await page.getByLabel("ตั้งแต่วันที่", { exact: true }).fill("2026-01-01");
-  await page.getByLabel("ถึงวันที่").fill("2026-12-31");
+  const setDate = async (label: string, day: string, month: string, beYear: string) => {
+    await page.getByLabel(`${label}: ปี (พ.ศ.)`).fill(beYear);
+    await page.getByLabel(`${label}: เดือน`).selectOption(month);
+    await page.getByLabel(`${label}: วัน`).selectOption(day);
+  };
+  await setDate("ตั้งแต่วันที่", "1", "1", "2569");
+  await setDate("ถึงวันที่", "31", "12", "2569");
   await expect(page.getByText("364 วัน", { exact: true })).toBeVisible();
 });
 

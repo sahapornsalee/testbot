@@ -1,19 +1,20 @@
 import { useState } from "react";
-import { formatThaiDate, parseIsoDate, today } from "../calendar/dates";
+import { DateInput } from "../../components/DateInput";
+import { formatDate } from "../../lib/datetime";
+import { parseIsoDate } from "../calendar/dates";
+import { useDateTime } from "../settings/SettingsContext";
 import { age } from "./age";
 import "./life.css";
 
 export default function AgeWidget() {
+  const { locale, today } = useDateTime();
   const [birth, setBirth] = useState("1995-01-01");
   const date = parseIsoDate(birth);
   const result = date ? age(date, today()) : null;
 
   return (
     <div className="stack">
-      <label className="field">
-        วันเกิด
-        <input className="input" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} />
-      </label>
+      <DateInput label="วันเกิด" value={birth} onChange={setBirth} locale={locale} />
       {!result ? (
         <p className="muted">เลือกวันเกิด</p>
       ) : result.ok ? (
@@ -39,7 +40,7 @@ export default function AgeWidget() {
               <dd>{result.value.animal}</dd>
             </div>
           </dl>
-          {date && <p className="muted small">เกิด{formatThaiDate(date)}</p>}
+          {date && <p className="muted small">เกิด{formatDate(date, locale)}</p>}
         </>
       ) : (
         <p className="error-text" role="alert">

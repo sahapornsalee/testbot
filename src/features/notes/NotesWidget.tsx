@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft, Plus, Search, Trash2 } from "lucide-react";
 import { MAX_NOTE_LENGTH, noteRepository, type Note } from "../../data/models";
 import { useCollection } from "../../hooks/useCollection";
+import { useDateTime } from "../settings/SettingsContext";
 import { createNote, displayTitle, excerpt, formatUpdated, searchNotes } from "./notes";
 import "./notes.css";
 
@@ -12,6 +13,7 @@ export default function NotesWidget() {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const searchId = useId();
+  const dateTime = useDateTime();
 
   if (status === "loading") return <p className="muted">กำลังโหลดบันทึก…</p>;
   if (status === "error") return <p className="error-text" role="alert">{error}</p>;
@@ -65,7 +67,7 @@ export default function NotesWidget() {
                 >
                   <strong>{displayTitle(note)}</strong>
                   <span>{excerpt(note.body) || "ไม่มีเนื้อหา"}</span>
-                  <small>{formatUpdated(note.updatedAt)}</small>
+                  <small>{formatUpdated(note.updatedAt, dateTime)}</small>
                 </button>
               </li>
             ))}
