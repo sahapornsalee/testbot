@@ -43,8 +43,21 @@ Browser ──► Next.js web (apps/web) ──/api/v1/* rewrite──► FastAP
 ```
 queued ─► inspecting ─► downloading ─► processing ─► completed ─► expired
    │           │             │              │
-   └───────────┴─────────────┴──────────────┴──► failed | cancelled
+   ├───────────┴──────┬──────┘              │
+   │                  ▼                     │
+   │               paused ──resume──► queued│      (paused ─► cancelled | expired)
+   └────────────────────────────────────────┴──► failed | cancelled
 ```
+
+## Segmented downloads
+
+`direct.download_direct` first sends `Range: bytes=0-`. If the server answers `206` with a known
+size and no content encoding, the file is pre-allocated and split into up to
+`MAX_CONNECTIONS_PER_DOWNLOAD` segments (each ≥ `MIN_SEGMENT_SIZE_KB`), fetched in parallel by an
+`asyncio.TaskGroup`, each writing at its own offset. Every request goes through the SSRF-guarded
+client. Segment progress is saved to `<job>.state.json` (at most once per second, and on
+pause/failure); requests carry `If-Range` with the ETag/Last-Modified so a changed file is detected
+and the download restarts cleanly. Servers without range support get a single streaming connection.
 
 Transitions are enforced in `JobStore.update`. `completed` is set only after the final file
 exists in `DOWNLOAD_DIR/<job_id>/` with the expected size. Temporary files are deleted for every

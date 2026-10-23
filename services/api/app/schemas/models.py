@@ -62,6 +62,16 @@ class MediaInfo(BaseModel):
     ffmpeg_available: bool = False
 
 
+class PageLink(BaseModel):
+    """A downloadable resource found on a web page (IDM-style "grab all links")."""
+
+    url: str
+    category: Category | Literal["stream"]
+    extension: str | None
+    source: str  # the HTML element it came from: a, img, video, audio, source, ...
+    label: str | None = None
+
+
 class InspectResponse(BaseModel):
     url: str
     final_url: str
@@ -78,6 +88,7 @@ class InspectResponse(BaseModel):
     downloadable: bool
     warnings: list[str]
     media: MediaInfo | None = None
+    links: list[PageLink] = []
 
 
 class DownloadMode(StrEnum):
@@ -98,6 +109,7 @@ class JobStatus(StrEnum):
     INSPECTING = "inspecting"
     DOWNLOADING = "downloading"
     PROCESSING = "processing"
+    PAUSED = "paused"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -122,7 +134,26 @@ class JobView(BaseModel):
     finished_at: datetime | None
     error: ErrorBody | None
     download_available: bool
+    connections: int | None = None
+    can_pause: bool = False
+    can_resume: bool = False
 
 
 class JobList(BaseModel):
     items: list[JobView]
+
+
+class BatchDownloadRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    items: list[CreateDownloadRequest] = Field(min_length=1, max_length=500)
+
+
+class BatchError(BaseModel):
+    index: int
+    url: str
+    error: ErrorBody
+
+
+class BatchDownloadResponse(BaseModel):
+    created: list[JobView]
+    errors: list[BatchError]

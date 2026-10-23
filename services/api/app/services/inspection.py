@@ -7,10 +7,12 @@ from pathlib import Path
 import httpx
 
 from app.core.config import Settings
+from app.core.errors import AppError
 from app.core.url_policy import DestinationPolicy
 from app.schemas.models import InspectResponse
 from app.services import file_types, media
 from app.services.direct import inspect_http
+from app.services.page_links import fetch_page_links
 
 
 async def inspect_url(
@@ -55,12 +57,23 @@ async def inspect_url(
     warnings = []
     downloadable = True
     kind = "file"
+    links = []
     if result.content_type == "text/html":
         kind = "webpage"
         downloadable = False
         warnings.append("WEBPAGE_NOT_FILE")
+        try:
+            links = await fetch_page_links(
+                client,
+                result.final_url,
+                max_redirects=settings.max_redirects,
+                max_bytes=settings.max_page_bytes,
+            )
+        except (AppError, httpx.HTTPError):
+            warnings.append("PAGE_NOT_READABLE")
     if result.size_bytes is None:
-        warnings.append("SIZE_UNKNOWN")
+        if kind == "file":
+            warnings.append("SIZE_UNKNOWN")
     elif result.size_bytes > settings.max_file_size_bytes:
         downloadable = False
         warnings.append("FILE_TOO_LARGE")
@@ -85,4 +98,5 @@ async def inspect_url(
         accepts_ranges=result.accepts_ranges,
         downloadable=downloadable,
         warnings=warnings,
+        links=links,
     )

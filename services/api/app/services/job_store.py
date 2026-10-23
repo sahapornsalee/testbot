@@ -14,12 +14,15 @@ from app.schemas.models import DownloadMode, JobStatus
 S = JobStatus
 ACTIVE_STATUSES = frozenset({S.QUEUED, S.INSPECTING, S.DOWNLOADING, S.PROCESSING})
 TERMINAL_STATUSES = frozenset({S.COMPLETED, S.FAILED, S.CANCELLED, S.EXPIRED})
+# Jobs that occupy a place in an owner's queue (paused jobs keep their partial data).
+QUEUE_STATUSES = ACTIVE_STATUSES | {S.PAUSED}
 
 ALLOWED_TRANSITIONS: dict[JobStatus, frozenset[JobStatus]] = {
-    S.QUEUED: frozenset({S.INSPECTING, S.FAILED, S.CANCELLED}),
-    S.INSPECTING: frozenset({S.DOWNLOADING, S.FAILED, S.CANCELLED}),
-    S.DOWNLOADING: frozenset({S.PROCESSING, S.FAILED, S.CANCELLED}),
+    S.QUEUED: frozenset({S.INSPECTING, S.PAUSED, S.FAILED, S.CANCELLED}),
+    S.INSPECTING: frozenset({S.DOWNLOADING, S.PAUSED, S.FAILED, S.CANCELLED}),
+    S.DOWNLOADING: frozenset({S.PROCESSING, S.PAUSED, S.FAILED, S.CANCELLED}),
     S.PROCESSING: frozenset({S.COMPLETED, S.FAILED, S.CANCELLED}),
+    S.PAUSED: frozenset({S.QUEUED, S.CANCELLED, S.EXPIRED}),
     S.COMPLETED: frozenset({S.EXPIRED}),
     S.FAILED: frozenset(),
     S.CANCELLED: frozenset(),
@@ -57,6 +60,8 @@ class JobRecord:
     created_at: datetime | None = None
     started_at: datetime | None = None
     finished_at: datetime | None = None
+    connections: int | None = None
+    paused_at: datetime | None = None
 
 
 _COLUMNS = [f.name for f in fields(JobRecord)]
@@ -81,7 +86,9 @@ CREATE TABLE IF NOT EXISTS jobs (
     error_message TEXT,
     created_at TEXT NOT NULL,
     started_at TEXT,
-    finished_at TEXT
+    finished_at TEXT,
+    connections INTEGER,
+    paused_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_jobs_owner_created ON jobs (owner, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs (status);
@@ -104,7 +111,7 @@ def _to_row(job: JobRecord) -> dict[str, object]:
 
 def _from_row(row: sqlite3.Row) -> JobRecord:
     data = dict(row)
-    for key in ("created_at", "started_at", "finished_at"):
+    for key in ("created_at", "started_at", "finished_at", "paused_at"):
         if data[key]:
             data[key] = datetime.fromisoformat(data[key])
     data["status"] = JobStatus(data["status"])
@@ -124,7 +131,16 @@ class JobStore:
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.executescript(_SCHEMA)
+        self._migrate()
         self._lock = threading.Lock()
+
+    def _migrate(self) -> None:
+        """Add columns introduced after a database was created (keeps job history)."""
+        existing = {row[1] for row in self._conn.execute("PRAGMA table_info(jobs)")}
+        for column, ddl in (("connections", "INTEGER"), ("paused_at", "TEXT")):
+            if column not in existing:
+                self._conn.execute(f"ALTER TABLE jobs ADD COLUMN {column} {ddl}")
+        self._conn.commit()
 
     def close(self) -> None:
         with self._lock:
@@ -162,11 +178,11 @@ class JobStore:
         return [_from_row(row) for row in rows]
 
     def count_active_for_owner(self, owner: str) -> int:
-        marks = ",".join("?" for _ in ACTIVE_STATUSES)
+        marks = ",".join("?" for _ in QUEUE_STATUSES)
         with self._lock:
             row = self._conn.execute(
                 f"SELECT COUNT(*) FROM jobs WHERE owner = ? AND status IN ({marks})",  # noqa: S608
-                (owner, *[s.value for s in ACTIVE_STATUSES]),
+                (owner, *[s.value for s in QUEUE_STATUSES]),
             ).fetchone()
         return int(row[0])
 

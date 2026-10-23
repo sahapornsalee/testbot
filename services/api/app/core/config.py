@@ -28,7 +28,14 @@ class Settings(BaseSettings):
     max_file_size_mb: int = Field(default=1024, ge=1)
     max_storage_mb: int = Field(default=10240, ge=1)
     max_concurrent_jobs: int = Field(default=2, ge=1, le=32)
-    max_active_jobs_per_owner: int = Field(default=5, ge=1)
+    # Queued + running + paused jobs one owner may have (the queue length).
+    max_active_jobs_per_owner: int = Field(default=50, ge=1)
+    # Parallel connections per direct download (IDM-style segmented download).
+    max_connections_per_download: int = Field(default=8, ge=1, le=16)
+    # Files smaller than 2 x this are downloaded over a single connection.
+    min_segment_size_kb: int = Field(default=1024, ge=16)
+    max_batch_size: int = Field(default=50, ge=1, le=500)
+    max_page_bytes: int = Field(default=2 * 1024 * 1024, ge=64 * 1024)
     job_timeout_seconds: int = Field(default=1800, ge=10)
     connect_timeout_seconds: float = Field(default=10.0, gt=0)
     read_timeout_seconds: float = Field(default=30.0, gt=0)
@@ -42,7 +49,7 @@ class Settings(BaseSettings):
     api_tokens: Annotated[list[str], NoDecode] = []
 
     rate_limit_per_minute: int = Field(default=60, ge=1)
-    max_request_body_bytes: int = Field(default=16 * 1024, ge=1024)
+    max_request_body_bytes: int = Field(default=128 * 1024, ge=1024)
 
     ytdlp_enabled: bool = True
     ffmpeg_location: str | None = None
@@ -74,6 +81,10 @@ class Settings(BaseSettings):
     @property
     def max_file_size_bytes(self) -> int:
         return self.max_file_size_mb * 1024 * 1024
+
+    @property
+    def min_segment_bytes(self) -> int:
+        return self.min_segment_size_kb * 1024
 
     @property
     def max_storage_bytes(self) -> int:

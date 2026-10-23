@@ -47,3 +47,33 @@ test("layout has no horizontal overflow and settings show server status", async 
   await page.goto("/history");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
+
+test("batch add links and pause/resume a download", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "English" }).click();
+  await page.getByText("Add many links").click();
+  await page.getByLabel("Links (one per line)").fill(`${FIXTURE}/report\n${FIXTURE}/slow-ranged.bin`);
+  await page.getByRole("button", { name: "Add 2 links to queue" }).click();
+  await expect(page.getByText("2 added to the queue, 0 rejected.")).toBeVisible();
+
+  const report = page.getByTestId("job-card").filter({ hasText: "report.pdf" }).first();
+  await expect(report.getByText("Completed")).toBeVisible({ timeout: 15_000 });
+
+  const slow = page.getByTestId("job-card").filter({ hasText: "slow-ranged.bin" }).first();
+  await slow.getByRole("button", { name: "Pause" }).click();
+  await expect(slow.getByText("Paused")).toBeVisible({ timeout: 10_000 });
+  await slow.getByRole("button", { name: "Resume" }).click();
+  await expect(slow.getByText("Completed")).toBeVisible({ timeout: 30_000 });
+});
+
+test("grab files from a web page", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "English" }).click();
+  await page.getByLabel("Link (URL)").fill(`${FIXTURE}/gallery.html`);
+  await page.getByRole("button", { name: "Analyze" }).click();
+  await expect(page.getByText(/Files found on this page \(\d+\)/)).toBeVisible();
+  await expect(page.getByText("Annual report")).toBeVisible();
+  await page.getByRole("checkbox", { name: /Annual report/ }).check();
+  await page.getByRole("button", { name: "Download selected (1)" }).click();
+  await expect(page.getByText("1 added to the queue, 0 rejected.")).toBeVisible();
+});

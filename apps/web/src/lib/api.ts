@@ -1,4 +1,4 @@
-import type { CreateDownload, Health, InspectResult, Job } from "./types";
+import type { BatchResult, CreateDownload, Health, InspectResult, Job } from "./types";
 
 export const API_BASE = "/api/v1";
 export const TOKEN_STORAGE_KEY = "ud.token";
@@ -68,6 +68,12 @@ export const api = {
     request<InspectResult>("/inspect", { method: "POST", body: JSON.stringify({ url }) }),
   createDownload: (body: CreateDownload) =>
     request<Job>("/downloads", { method: "POST", body: JSON.stringify(body) }),
+  createBatch: (items: CreateDownload[]) =>
+    request<BatchResult>("/downloads/batch", { method: "POST", body: JSON.stringify({ items }) }),
+  pauseDownload: (id: string) =>
+    request<Job>(`/downloads/${encodeURIComponent(id)}/pause`, { method: "POST" }),
+  resumeDownload: (id: string) =>
+    request<Job>(`/downloads/${encodeURIComponent(id)}/resume`, { method: "POST" }),
   listDownloads: () => request<{ items: Job[] }>("/downloads"),
   getDownload: (id: string) => request<Job>(`/downloads/${encodeURIComponent(id)}`),
   cancelDownload: (id: string) =>

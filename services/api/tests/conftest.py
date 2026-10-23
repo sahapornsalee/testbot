@@ -7,6 +7,7 @@ tests via ``DestinationPolicy(extra_allowed_networks=["127.0.0.1/32"])``.
 
 from __future__ import annotations
 
+import random
 import threading
 import time
 from collections.abc import Iterator
@@ -30,6 +31,9 @@ WEB_HEADERS = {"X-UD-Client": "web"}
 class FixtureHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     flaky_hits: dict[str, int] = {}
+    # Range headers received per path, so tests can see segmenting and resuming.
+    range_log: dict[str, list[str]] = {}
+    etag = '"v1"'
 
     def log_message(self, *args: object) -> None:  # silence test output
         pass
@@ -126,6 +130,50 @@ class FixtureHandler(BaseHTTPRequestHandler):
                     time.sleep(0.05)
             except (BrokenPipeError, ConnectionResetError):
                 pass
+        elif path in ("/medium.bin", "/flaky-ranged.bin", "/slow-ranged.bin"):
+            range_header = self.headers.get("Range", "")
+            FixtureHandler.range_log.setdefault(path, []).append(range_header)
+            body = MEDIUM_BODY if path != "/slow-ranged.bin" else SLOW_BODY
+            if_range = self.headers.get("If-Range")
+            if if_range and if_range != FixtureHandler.etag:
+                range_header = ""  # file changed: RFC 9110 says send the whole new file
+            start, end = 0, len(body) - 1
+            status = 200
+            if range_header.startswith("bytes="):
+                start_s, _, end_s = range_header[6:].partition("-")
+                start = int(start_s)
+                end = min(int(end_s), len(body) - 1) if end_s else len(body) - 1
+                status = 206
+            self.send_response(status)
+            self.send_header("Content-Type", "application/octet-stream")
+            self.send_header("Accept-Ranges", "bytes")
+            self.send_header("ETag", FixtureHandler.etag)
+            self.send_header("Content-Length", str(end - start + 1))
+            if status == 206:
+                self.send_header("Content-Range", f"bytes {start}-{end}/{len(body)}")
+            self.end_headers()
+            payload = body[start : end + 1]
+            try:
+                if path == "/flaky-ranged.bin" and start > 0:
+                    key = f"{path}:{end}"  # the segment's end stays fixed across retries
+                    hits = FixtureHandler.flaky_hits.get(key, 0)
+                    FixtureHandler.flaky_hits[key] = hits + 1
+                    if hits == 0:  # drop each non-first segment once, half way through
+                        self.wfile.write(payload[: len(payload) // 2])
+                        self.wfile.flush()
+                        self.close_connection = True
+                        return
+                if path == "/slow-ranged.bin":
+                    for offset in range(0, len(payload), 4096):
+                        self.wfile.write(payload[offset : offset + 4096])
+                        self.wfile.flush()
+                        time.sleep(0.08)
+                else:
+                    self.wfile.write(payload)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+        elif path == "/gallery.html":
+            self._send(200, GALLERY_HTML, {"Content-Type": "text/html; charset=utf-8"})
         elif path == "/redirect-safe":
             self._send(302, b"", {"Location": "/image.png"})
         elif path == "/redirect-internal":
@@ -143,6 +191,24 @@ class FixtureHandler(BaseHTTPRequestHandler):
 
 
 ZIP_BODY = b"PK\x03\x04" + bytes(range(256)) * 400
+MEDIUM_BODY = b"PK\x03\x04" + random.Random(7).randbytes(1_500_000)
+SLOW_BODY = random.Random(8).randbytes(400_000)
+GALLERY_HTML = b"""<!doctype html><html><head>
+<base href="/files/">
+<meta property="og:image" content="https://cdn.example.com/cover.jpg">
+</head><body>
+<a href="report.pdf">Annual report</a>
+<a href="/about">About us</a>
+<a href="https://example.com/archive.zip" title="All files">zip</a>
+<a href="javascript:alert(1)">bad.zip</a>
+<a href="report.pdf">duplicate</a>
+<img src="photo.png" alt="A photo" srcset="photo-2x.png 2x, photo-3x.png 3x">
+<a href="/gallery/full.jpg"><img src="/gallery/thumb.jpg"></a>
+<video poster="poster.jpg"><source src="clip.mp4" type="video/mp4"></video>
+<audio src="/stream/song"></audio>
+<a href="live/playlist.m3u8">Live</a>
+<a href="data:text/plain,hi.txt">data</a>
+</body></html>"""
 
 
 @pytest.fixture(scope="session")
@@ -165,6 +231,8 @@ def settings(tmp_path: Path) -> Settings:
         max_file_size_mb=2,
         max_storage_mb=50,
         max_concurrent_jobs=2,
+        max_connections_per_download=4,
+        min_segment_size_kb=64,
         job_timeout_seconds=60,
         connect_timeout_seconds=2,
         read_timeout_seconds=2,

@@ -25,11 +25,19 @@ from app.core.url_policy import DestinationPolicy, validate_url
 from app.schemas.models import CreateDownloadRequest, DownloadMode, JobStatus
 from app.services import file_types, media
 from app.services.direct import download_direct
-from app.services.job_store import ACTIVE_STATUSES, JobRecord, JobStore, utcnow
+from app.services.job_store import (
+    ACTIVE_STATUSES,
+    JobRecord,
+    JobStore,
+    utcnow,
+)
 from app.services.storage import Storage
 
 logger = logging.getLogger("universal_downloader.jobs")
 PROGRESS_WRITE_INTERVAL = 0.5
+PAUSABLE_STATUSES = frozenset({JobStatus.QUEUED, JobStatus.INSPECTING, JobStatus.DOWNLOADING})
+# Paused jobs keep their partial data at least this long, even with a short TTL.
+MIN_PAUSED_RETENTION = timedelta(hours=24)
 
 
 class JobQueue(Protocol):
@@ -37,6 +45,8 @@ class JobQueue(Protocol):
     async def stop(self) -> None: ...
     def create_job(self, owner: str, request: CreateDownloadRequest) -> JobRecord: ...
     def cancel(self, owner: str, job_id: str) -> JobRecord: ...
+    def pause(self, owner: str, job_id: str) -> JobRecord: ...
+    def resume(self, owner: str, job_id: str) -> JobRecord: ...
 
 
 class JobRunner:
@@ -56,12 +66,16 @@ class JobRunner:
         self._semaphore = asyncio.Semaphore(settings.max_concurrent_jobs)
         self._tasks: dict[str, asyncio.Task[None]] = {}
         self._cancel_requested: set[str] = set()
+        self._pause_requested: set[str] = set()
         self._cleanup_task: asyncio.Task[None] | None = None
 
     # -- lifecycle ---------------------------------------------------------------
     async def start(self) -> None:
         for job in self.store.list_by_status(ACTIVE_STATUSES):
-            # Jobs from a previous process cannot be resumed safely; fail them clearly.
+            if job.mode == DownloadMode.DIRECT and job.status in PAUSABLE_STATUSES:
+                # Direct downloads keep their partial data: pause them so the user can resume.
+                self.store.update(job.id, status=JobStatus.PAUSED, paused_at=utcnow())
+                continue
             self.store.update(
                 job.id,
                 status=JobStatus.FAILED,
@@ -96,7 +110,7 @@ class JobRunner:
         if request.mode == DownloadMode.MEDIA and not request.format_id:
             raise AppError(ErrorCode.FORMAT_NOT_AVAILABLE, "A format must be selected for media")
         if self.store.count_active_for_owner(owner) >= self.settings.max_active_jobs_per_owner:
-            raise AppError(ErrorCode.QUOTA_EXCEEDED, "Too many active jobs; wait for one to finish")
+            raise AppError(ErrorCode.QUOTA_EXCEEDED, "Too many jobs in the queue")
         job = self.store.insert(
             JobRecord(
                 id=uuid.uuid4().hex,
@@ -114,6 +128,9 @@ class JobRunner:
 
     def cancel(self, owner: str, job_id: str) -> JobRecord:
         job = self.store.get_for_owner(job_id, owner)
+        if job.status == JobStatus.PAUSED:
+            self.storage.remove_job_files(job_id)
+            return self.store.update(job_id, status=JobStatus.CANCELLED, finished_at=utcnow())
         if job.status not in ACTIVE_STATUSES:
             raise AppError(ErrorCode.INVALID_STATE, "Only queued or running jobs can be cancelled")
         self._cancel_requested.add(job_id)
@@ -122,6 +139,29 @@ class JobRunner:
             task.cancel()
         else:
             job = self._finish(job_id, JobStatus.CANCELLED)
+        return job
+
+    def pause(self, owner: str, job_id: str) -> JobRecord:
+        job = self.store.get_for_owner(job_id, owner)
+        if job.mode != DownloadMode.DIRECT:
+            raise AppError(ErrorCode.INVALID_STATE, "Media downloads cannot be paused")
+        if job.status not in PAUSABLE_STATUSES:
+            raise AppError(ErrorCode.INVALID_STATE, "Only queued or downloading jobs can be paused")
+        task = self._tasks.get(job_id)
+        if task is not None and not task.done():
+            self._pause_requested.add(job_id)
+            task.cancel()
+            return job
+        return self.store.update(job_id, status=JobStatus.PAUSED, paused_at=utcnow())
+
+    def resume(self, owner: str, job_id: str) -> JobRecord:
+        job = self.store.get_for_owner(job_id, owner)
+        if job.status != JobStatus.PAUSED:
+            raise AppError(ErrorCode.INVALID_STATE, "Only paused jobs can be resumed")
+        job = self.store.update(
+            job_id, status=JobStatus.QUEUED, paused_at=None, error_code=None, error_message=None
+        )
+        self._tasks[job_id] = asyncio.create_task(self._run(job_id), name=f"job-{job_id}")
         return job
 
     # -- execution -------------------------------------------------------------------
@@ -159,7 +199,11 @@ class JobRunner:
                 async with asyncio.timeout(self.settings.job_timeout_seconds):
                     await self.execute(job_id)
         except asyncio.CancelledError:
-            if job_id in self._cancel_requested:
+            if job_id in self._pause_requested:
+                current = self.store.get(job_id)
+                if current is not None and current.status in PAUSABLE_STATUSES:
+                    self.store.update(job_id, status=JobStatus.PAUSED, paused_at=utcnow())
+            elif job_id in self._cancel_requested:
                 self._finish(job_id, JobStatus.CANCELLED)
             else:
                 self._finish(
@@ -179,18 +223,23 @@ class JobRunner:
             self._finish(job_id, JobStatus.FAILED, AppError(ErrorCode.INTERNAL_ERROR))
         finally:
             final = self.store.get(job_id)
-            if final is None or final.status != JobStatus.COMPLETED:
+            if final is not None and final.status == JobStatus.PAUSED:
+                pass  # keep the partial file and its resume state
+            elif final is None or final.status != JobStatus.COMPLETED:
                 self.storage.remove_job_files(job_id)
             else:
                 self.storage.remove_job_files_temp_only(job_id)
             self._tasks.pop(job_id, None)
             self._cancel_requested.discard(job_id)
+            self._pause_requested.discard(job_id)
 
     async def execute(self, job_id: str) -> None:
         job = self.store.get(job_id)
         if job is None or job.status != JobStatus.QUEUED:
             return
-        self.store.update(job_id, status=JobStatus.INSPECTING, started_at=utcnow())
+        self.store.update(
+            job_id, status=JobStatus.INSPECTING, started_at=job.started_at or utcnow()
+        )
         await self.policy.validate(job.source_url)
         if job.mode == DownloadMode.DIRECT:
             await self._execute_direct(job)
@@ -212,6 +261,10 @@ class JobRunner:
                 on_metadata=lambda name, mime: self.store.update(
                     job.id, filename=name, content_type=mime
                 ),
+                connections=self.settings.max_connections_per_download,
+                min_segment_bytes=self.settings.min_segment_bytes,
+                state_path=self.storage.temp_path(job.id, ".state.json"),
+                on_plan=lambda count: self.store.update(job.id, connections=count),
             )
         self.store.update(
             job.id,
@@ -291,7 +344,15 @@ class JobRunner:
                 self.storage.remove_job_files(job.id)
                 self.store.update(job.id, status=JobStatus.EXPIRED, file_path=None)
                 expired += 1
-        self.storage.remove_stale_temp(ttl.total_seconds(), keep=set(self._tasks))
+        paused_ttl = max(ttl, MIN_PAUSED_RETENTION)
+        paused = self.store.list_by_status(frozenset({JobStatus.PAUSED}))
+        for job in paused:
+            if job.paused_at and now - job.paused_at >= paused_ttl:
+                self.storage.remove_job_files(job.id)
+                self.store.update(job.id, status=JobStatus.EXPIRED)
+                expired += 1
+        keep = set(self._tasks) | {job.id for job in paused}
+        self.storage.remove_stale_temp(ttl.total_seconds(), keep=keep)
         return expired
 
     async def _cleanup_loop(self) -> None:

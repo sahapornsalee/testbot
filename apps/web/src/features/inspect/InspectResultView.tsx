@@ -8,6 +8,7 @@ import { ApiError, api } from "@/lib/api";
 import { formatBytes, formatDuration } from "@/lib/format";
 import type { InspectResult, Job } from "@/lib/types";
 import { FormatPicker } from "./FormatPicker";
+import { PageLinks } from "./PageLinks";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -21,9 +22,11 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export function InspectResultView({
   result,
   onJobCreated,
+  onQueued,
 }: {
   result: InspectResult;
   onJobCreated: (job: Job) => void;
+  onQueued?: () => void;
 }) {
   const { t, locale } = useI18n();
   const media = result.media;
@@ -126,6 +129,11 @@ export function InspectResultView({
         </div>
       )}
 
+      {result.kind === "webpage" && (
+        <PageLinks links={result.links ?? []} onQueued={() => onQueued?.()} />
+      )}
+
+      {result.kind !== "webpage" && (
       <div className="mt-4 space-y-2">
         {!result.downloadable && <p className="text-sm text-slate-600 dark:text-slate-300">{t("result.notDownloadable")}</p>}
         <button
@@ -143,6 +151,7 @@ export function InspectResultView({
         )}
         {error && <ErrorAlert code={error} />}
       </div>
+      )}
     </Card>
   );
 }

@@ -6,12 +6,15 @@ export type JobStatus =
   | "inspecting"
   | "downloading"
   | "processing"
+  | "paused"
   | "completed"
   | "failed"
   | "cancelled"
   | "expired";
 
 export const ACTIVE_STATUSES: JobStatus[] = ["queued", "inspecting", "downloading", "processing"];
+/** Jobs still in the queue: running ones plus paused ones waiting to be resumed. */
+export const QUEUE_STATUSES: JobStatus[] = [...ACTIVE_STATUSES, "paused"];
 
 export type MediaFormat = {
   format_id: string;
@@ -40,6 +43,14 @@ export type MediaInfo = {
   ffmpeg_available: boolean;
 };
 
+export type PageLink = {
+  url: string;
+  category: Category | "stream";
+  extension: string | null;
+  source: string;
+  label: string | null;
+};
+
 export type InspectResult = {
   url: string;
   final_url: string;
@@ -56,6 +67,7 @@ export type InspectResult = {
   downloadable: boolean;
   warnings: string[];
   media: MediaInfo | null;
+  links: PageLink[];
 };
 
 export type Job = {
@@ -76,6 +88,9 @@ export type Job = {
   finished_at: string | null;
   error: { code: string; message: string } | null;
   download_available: boolean;
+  connections: number | null;
+  can_pause: boolean;
+  can_resume: boolean;
 };
 
 export type Health = {
@@ -91,4 +106,9 @@ export type CreateDownload = {
   mode: "direct" | "media";
   format_id?: string;
   merge_audio?: boolean;
+};
+
+export type BatchResult = {
+  created: Job[];
+  errors: { index: number; url: string; error: { code: string; message: string } }[];
 };

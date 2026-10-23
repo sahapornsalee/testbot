@@ -40,3 +40,30 @@ describe("JobCard", () => {
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 });
+
+describe("JobCard pause and resume", () => {
+  it("pauses a running download and shows connections", async () => {
+    const onPause = vi.fn();
+    renderWithI18n(<JobCard job={makeJob({ connections: 8 })} onCancel={vi.fn()} onPause={onPause} />);
+    expect(screen.getByText(/8 connections/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Pause" }));
+    expect(onPause).toHaveBeenCalledWith(makeJob().id);
+  });
+
+  it("resumes a paused download and keeps its progress visible", async () => {
+    const onResume = vi.fn();
+    renderWithI18n(
+      <JobCard
+        job={makeJob({ status: "paused", can_pause: false, can_resume: true })}
+        onCancel={vi.fn()}
+        onResume={onResume}
+      />,
+      "th",
+    );
+    expect(screen.getByText("หยุดชั่วคราว")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "50");
+    expect(screen.getByRole("button", { name: "ยกเลิก" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "ดาวน์โหลดต่อ" }));
+    expect(onResume).toHaveBeenCalled();
+  });
+});

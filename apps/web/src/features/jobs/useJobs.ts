@@ -51,5 +51,19 @@ export function useJobs() {
     [refresh],
   );
 
-  return { jobs, error, refresh, cancel };
+  const act = useCallback(
+    async (call: (id: string) => Promise<unknown>, id: string) => {
+      try {
+        await call(id);
+      } catch (err) {
+        setError(err instanceof ApiError ? err.code : "UNKNOWN");
+      }
+      await refresh();
+    },
+    [refresh],
+  );
+  const pause = useCallback((id: string) => act(api.pauseDownload, id), [act]);
+  const resume = useCallback((id: string) => act(api.resumeDownload, id), [act]);
+
+  return { jobs, error, refresh, cancel, pause, resume };
 }

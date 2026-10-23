@@ -25,12 +25,13 @@ describe("InspectResultView", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("Download added to the queue.");
   });
 
-  it("disables download for web pages", () => {
+  it("shows no single-file download for web pages without files", () => {
     renderWithI18n(
       <InspectResultView result={{ ...fileResult, kind: "webpage", downloadable: false, warnings: ["WEBPAGE_NOT_FILE"] }} onJobCreated={vi.fn()} />,
     );
-    expect(screen.getByRole("button", { name: "Download" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Download" })).not.toBeInTheDocument();
     expect(screen.getByText("This link is a web page, not a downloadable file.")).toBeInTheDocument();
+    expect(screen.getByText("No downloadable files were found on this page.")).toBeInTheDocument();
   });
 
   it("lists only the real formats and pre-selects the best one", () => {

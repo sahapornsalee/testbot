@@ -72,7 +72,7 @@ class Storage:
         for path in (
             self.download_dir / job_id,
             self.temp_dir / job_id,
-            self.temp_dir / f"{job_id}.part",
+            *self.temp_dir.glob(f"{job_id}.*"),
         ):
             path = self._confine(path.parent.resolve(), path)
             if path.is_dir():
@@ -81,7 +81,7 @@ class Storage:
                 path.unlink(missing_ok=True)
 
     def remove_job_files_temp_only(self, job_id: str) -> None:
-        for path in (self.temp_dir / job_id, self.temp_dir / f"{job_id}.part"):
+        for path in (self.temp_dir / job_id, *self.temp_dir.glob(f"{job_id}.*")):
             if path.is_dir():
                 shutil.rmtree(path, ignore_errors=True)
             elif path.exists():

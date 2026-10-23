@@ -3,8 +3,17 @@
     "name": "Universal Downloader",
     "tagline": "Paste a link, see what is really there, download what you are allowed to."
   },
-  "nav": { "dashboard": "Dashboard", "history": "History", "settings": "Settings", "menu": "Main navigation" },
-  "language": { "label": "Language", "en": "English", "th": "ไทย" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "history": "History",
+    "settings": "Settings",
+    "menu": "Main navigation"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "th": "ไทย"
+  },
   "common": {
     "loading": "Loading…",
     "retry": "Try again",
@@ -50,7 +59,8 @@
     "audio": "Audio",
     "document": "Document",
     "archive": "Archive",
-    "other": "Other"
+    "other": "Other",
+    "stream": "Stream"
   },
   "warnings": {
     "SIZE_UNKNOWN": "The server did not report the file size.",
@@ -58,7 +68,8 @@
     "WEBPAGE_NOT_FILE": "This link is a web page, not a downloadable file.",
     "RISKY_FILE_TYPE": "This file type can run programs. It will never be opened automatically — only open it if you trust the source.",
     "NO_FORMATS": "No downloadable formats were found.",
-    "FFMPEG_MISSING": "FFmpeg is not installed, so formats that need audio merging are limited."
+    "FFMPEG_MISSING": "FFmpeg is not installed, so formats that need audio merging are limited.",
+    "PAGE_NOT_READABLE": "The page could not be read to look for files."
   },
   "media": {
     "title": "Title",
@@ -100,8 +111,14 @@
       "completed": "Completed",
       "failed": "Failed",
       "cancelled": "Cancelled",
-      "expired": "Expired"
-    }
+      "expired": "Expired",
+      "paused": "Paused"
+    },
+    "pause": "Pause",
+    "resume": "Resume",
+    "connections": "{n} connections",
+    "oneConnection": "1 connection",
+    "activeTitle": "In progress"
   },
   "settings": {
     "title": "Settings",
@@ -123,7 +140,10 @@
     "title": "Something went wrong",
     "description": "An unexpected error happened in the interface."
   },
-  "notFound": { "title": "Page not found", "description": "The page you are looking for does not exist." },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist."
+  },
   "errors": {
     "NETWORK": "Cannot reach the API server. Is it running?",
     "UNKNOWN": "Something went wrong. Please try again.",
@@ -152,5 +172,26 @@
     "CANCELLED": "The job was cancelled.",
     "INTERRUPTED": "The server restarted while this job was running.",
     "INTERNAL_ERROR": "The server hit an unexpected error."
+  },
+  "batch": {
+    "title": "Add many links",
+    "label": "Links (one per line)",
+    "help": "Each line is added to the queue as a direct download. Up to 50 links at a time.",
+    "submit": "Add {n} links to queue",
+    "submitting": "Adding…",
+    "result": "{created} added to the queue, {failed} rejected.",
+    "empty": "Paste at least one link.",
+    "failedItem": "Line {line}: {reason}"
+  },
+  "links": {
+    "title": "Files found on this page ({n})",
+    "none": "No downloadable files were found on this page.",
+    "selectAll": "Select all",
+    "selectNone": "Select none",
+    "download": "Download selected ({n})",
+    "all": "All",
+    "stream": "Streams",
+    "streamNote": "Streaming playlists (.m3u8/.mpd) are listed for reference; downloading them is not supported yet.",
+    "from": "from <{source}>"
   }
 }

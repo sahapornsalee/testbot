@@ -4,7 +4,7 @@ Interactive OpenAPI docs: `http://127.0.0.1:8000/api/docs` (disabled when `APP_E
 
 ## Conventions
 
-- JSON in/out. Request bodies are limited to `MAX_REQUEST_BODY_BYTES` (default 16 KB).
+- JSON in/out. Request bodies are limited to `MAX_REQUEST_BODY_BYTES` (default 128 KB).
 - **Identity:** Local Mode issues an `ud_session` HttpOnly cookie automatically. With
   `AUTH_REQUIRED=true`, send `Authorization: Bearer <token>` (token from `API_TOKENS`).
 - **CSRF:** every `POST` must include `X-UD-Client: web`; if an `Origin` header is present it must
@@ -39,6 +39,7 @@ Response (`InspectResponse`):
 | `accepts_ranges` | server supports byte ranges |
 | `downloadable` | false for web pages or files over the limit |
 | `warnings` | `SIZE_UNKNOWN`, `FILE_TOO_LARGE`, `WEBPAGE_NOT_FILE`, `RISKY_FILE_TYPE`, `NO_FORMATS`, `FFMPEG_MISSING` |
+| `links` | for `kind=webpage`: downloadable resources found on the page — `url`, `category` (`image`/`video`/`audio`/`document`/`archive`/`other`/`stream`), `extension`, `source` element, `label` (link text/alt). Max 500; only the page is fetched (≤ `MAX_PAGE_BYTES`), each link is validated again when downloaded |
 | `media` | for `kind=media`: `title`, `duration_seconds`, `uploader`, `extractor`, `formats[]`, `best_format_id`, `ffmpeg_available` |
 
 Each media format: `format_id`, `ext`, `kind` (`video+audio`/`video`/`audio`), `width`, `height`,
@@ -54,6 +55,17 @@ reports are listed; DRM formats and storyboards are removed.
 the job runs. `merge_audio` only applies to video-only formats and needs FFmpeg.
 Returns a `JobView`.
 
+### `POST /downloads/batch` → `202`
+`{"items": [CreateDownload, ...]}` (at most `MAX_BATCH_SIZE`, default 50). Each item is validated
+separately: `{"created": [JobView, ...], "errors": [{"index": 1, "url": "...", "error": {code, message}}]}`.
+
+### `POST /downloads/{job_id}/pause` · `POST /downloads/{job_id}/resume`
+Pause keeps the partial file and per-segment progress (`<job>.part` + `<job>.state.json` in
+`TEMP_DIR`); resume continues from the saved offsets using `Range` + `If-Range`, and restarts from
+zero automatically if the server reports the file changed. Only direct downloads can be paused
+(`409 INVALID_STATE` otherwise). Paused jobs are kept for `max(TEMP_FILE_TTL_HOURS, 24h)` and can
+also be cancelled.
+
 ### `GET /downloads`
 `{"items": [JobView, ...]}` — newest first, at most 100.
 
@@ -63,7 +75,8 @@ Returns a `JobView`.
 `JobView`: `id`, `status`, `mode`, `source_host`, `filename`, `category`, `content_type`,
 `format_id`, `expected_size`, `actual_size`, `downloaded_bytes`, `progress` (0–1 or `null` when the
 total is unknown), `created_at`, `started_at`, `finished_at`, `error` (`{code,message}` or `null`),
-`download_available`. Local filesystem paths are never returned.
+`download_available`, `connections` (parallel segments used), `can_pause`, `can_resume`. Status can
+also be `paused`. Local filesystem paths are never returned.
 
 ### `POST /downloads/{job_id}/cancel`
 Cancels a queued or running job (`409 INVALID_STATE` otherwise). Temp files are removed.

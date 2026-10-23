@@ -16,6 +16,7 @@ export const fileResult: InspectResult = {
   downloadable: true,
   warnings: [],
   media: null,
+  links: [],
 };
 
 export const mediaResult: InspectResult = {
@@ -63,6 +64,27 @@ export function makeJob(overrides: Partial<Job> = {}): Job {
     finished_at: null,
     error: null,
     download_available: false,
+    connections: null,
+    can_pause: true,
+    can_resume: false,
     ...overrides,
   };
 }
+
+export const pageResult: InspectResult = {
+  ...fileResult,
+  url: "https://site.example/gallery",
+  final_url: "https://site.example/gallery",
+  redirect_chain: [],
+  kind: "webpage",
+  content_type: "text/html",
+  category: "document",
+  downloadable: false,
+  warnings: ["WEBPAGE_NOT_FILE"],
+  links: [
+    { url: "https://site.example/a.pdf", category: "document", extension: "pdf", source: "a", label: "Report" },
+    { url: "https://site.example/b.jpg", category: "image", extension: "jpg", source: "img", label: null },
+    { url: "https://site.example/c.mp4", category: "video", extension: "mp4", source: "source", label: null },
+    { url: "https://site.example/live.m3u8", category: "stream", extension: "m3u8", source: "a", label: "Live" },
+  ],
+};

@@ -7,7 +7,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 
 export default function HistoryPage() {
   const { t } = useI18n();
-  const { jobs, error, refresh, cancel } = useJobs();
+  const { jobs, error, refresh, cancel, pause, resume } = useJobs();
   return (
     <>
       <h1 className="text-2xl font-bold">{t("jobs.historyTitle")}</h1>
@@ -19,7 +19,7 @@ export default function HistoryPage() {
           </button>
         }
       >
-        <JobList jobs={jobs} error={error} emptyKey="jobs.emptyHistory" onCancel={cancel} onRetry={refresh} />
+        <JobList jobs={jobs} error={error} emptyKey="jobs.emptyHistory" onCancel={cancel} onPause={pause} onResume={resume} onRetry={refresh} />
       </Card>
     </>
   );

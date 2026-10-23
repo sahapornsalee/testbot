@@ -64,7 +64,7 @@ def test_api_never_exposes_local_paths(
 
 
 def test_oversized_request_body_is_rejected(client: TestClient) -> None:
-    response = client.post("/api/v1/inspect", json={"url": "https://example.com/" + "a" * 20000})
+    response = client.post("/api/v1/inspect", json={"url": "https://example.com/" + "a" * 200_000})
     assert response.status_code == 413
     assert response.json()["error"]["code"] == "REQUEST_TOO_LARGE"
 
