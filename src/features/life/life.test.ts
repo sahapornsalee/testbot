@@ -149,7 +149,7 @@ describe("world clock", () => {
     expect(zoneOffsetMinutes("America/New_York", date)).toBe(-300);
     expect(zoneOffsetMinutes("Asia/Kolkata", date)).toBe(330);
     expect(zoneOffsetMinutes("America/New_York", new Date(Date.UTC(2026, 6, 15, 12)))).toBe(-240);
-    expect(describeDifference(0)).toBe("เวลาเดียวกับเครื่องนี้");
+    expect(describeDifference(0)).toBe("เวลาเดียวกัน");
     expect(describeDifference(120)).toBe("เร็วกว่า 2 ชม.");
     expect(describeDifference(-690)).toBe("ช้ากว่า 11 ชม. 30 นาที");
   });

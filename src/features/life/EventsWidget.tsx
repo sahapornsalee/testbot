@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { usePersistentState } from "../../hooks/usePersistentState";
-import { formatThaiDate, today, toIsoDate } from "../calendar/dates";
+import { DateInput } from "../../components/DateInput";
+import { formatDate } from "../../lib/datetime";
+import { toIsoDate } from "../calendar/dates";
+import { useDateTime } from "../settings/SettingsContext";
 import { createEvent, daysUntil, EMPTY_EVENTS, EVENTS_KEY, MAX_EVENTS, nextOccurrence, parseEvents, sortEvents } from "./events";
 import "./life.css";
 
 export default function EventsWidget() {
   const [data, setData] = usePersistentState(EVENTS_KEY, parseEvents, EMPTY_EVENTS);
+  const { locale, today } = useDateTime();
   const now = today();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(toIsoDate(now));
@@ -38,10 +42,7 @@ export default function EventsWidget() {
             ชื่อเหตุการณ์
             <input className="input" maxLength={100} placeholder="เช่น วันสอบ, วันเกิดแม่" value={title} onChange={(e) => setTitle(e.target.value)} />
           </label>
-          <label className="field">
-            วันที่
-            <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </label>
+          <DateInput label="วันที่" value={date} onChange={setDate} locale={locale} />
         </div>
         <div className="button-row">
           <label className="checkbox-label">
@@ -69,7 +70,7 @@ export default function EventsWidget() {
                 <div>
                   {event.title}
                   <small>
-                    {formatThaiDate(nextOccurrence(event, now))}
+                    {formatDate(nextOccurrence(event, now), locale)}
                     {event.yearly ? " · ทุกปี" : ""}
                   </small>
                 </div>

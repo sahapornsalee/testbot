@@ -19,7 +19,7 @@ import { SETTINGS_KEY } from "./settings";
 const task = { id: "t1", title: "งาน", done: false, order: 0, createdAt: 1, updatedAt: 1 };
 const note = { id: "n1", title: "โน้ต", body: "เนื้อหา", createdAt: 1, updatedAt: 1 };
 const expense = { id: "e1", date: "2026-10-23", type: "expense" as const, amount: 120, category: "อาหาร", note: "", createdAt: 1, updatedAt: 1 };
-const settings = { version: 1 as const, theme: "dark" as const, timeFormat: "12h" as const };
+const settings = { version: 1 as const, theme: "dark" as const, timeFormat: "12h" as const, dateLocale: "en-GB" as const, timeZone: "Europe/London" };
 const layout = { version: 2 as const, columns: 2 as const, items: [{ id: "notes", size: "large" as const, hidden: false }] };
 const habits = { version: 1, habits: [{ id: "h", name: "ดื่มน้ำ", createdAt: 1, done: ["2026-10-22"] }] };
 const full: BackupData = { settings, layout, tasks: [task], notes: [note], expenses: [expense], toolData: { [HABITS_KEY]: habits } };

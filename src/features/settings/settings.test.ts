@@ -3,11 +3,19 @@ import { DEFAULT_SETTINGS, parseSettings, resolveTheme } from "./settings";
 
 describe("parseSettings", () => {
   it("accepts valid settings", () => {
-    expect(parseSettings({ version: 1, theme: "dark", timeFormat: "12h" })).toEqual({
+    expect(parseSettings({ version: 1, theme: "dark", timeFormat: "12h", dateLocale: "en-GB", timeZone: "Europe/London" })).toEqual({
       version: 1,
       theme: "dark",
       timeFormat: "12h",
+      dateLocale: "en-GB",
+      timeZone: "Europe/London",
     });
+  });
+
+  it("defaults older settings to Thai date format and Bangkok time", () => {
+    expect(parseSettings({ version: 1, theme: "dark", timeFormat: "24h" })).toMatchObject({ dateLocale: "th", timeZone: "Asia/Bangkok" });
+    expect(parseSettings({ version: 1, timeZone: "device" })?.timeZone).toBe("device");
+    expect(parseSettings({ version: 1, timeZone: "Mars/Base", dateLocale: "fr" })).toMatchObject({ dateLocale: "th", timeZone: "Asia/Bangkok" });
   });
 
   it("replaces invalid fields with defaults", () => {

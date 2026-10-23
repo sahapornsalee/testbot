@@ -11,14 +11,29 @@ import {
   readBackupFile,
   type ParsedBackup,
 } from "./backup";
+import { useNow } from "../../hooks/useNow";
+import { deviceTimeZone, formatDateTime, formatLongDate, formatTime, type DateLocale } from "../../lib/datetime";
+import { PRESET_ZONES } from "../life/worldClock";
 import { useSettings } from "./SettingsContext";
-import type { ThemePreference, TimeFormat } from "./settings";
+import { DEVICE_ZONE, type ThemePreference, type TimeFormat } from "./settings";
 import "./settings.css";
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: "light", label: "สว่าง" },
   { value: "dark", label: "มืด" },
   { value: "system", label: "ตามระบบ" },
+];
+
+const DATE_LOCALE_OPTIONS: { value: DateLocale; label: string }[] = [
+  { value: "th", label: "ไทย (พ.ศ.)" },
+  { value: "en-GB", label: "อังกฤษ UK (ค.ศ.)" },
+];
+
+/** Thailand first, then England, then the rest of the presets. */
+const ZONE_OPTIONS = [
+  { zone: "Asia/Bangkok", label: "ประเทศไทย (กรุงเทพฯ)" },
+  { zone: "Europe/London", label: "อังกฤษ (ลอนดอน)" },
+  ...PRESET_ZONES.filter((p) => p.zone !== "Asia/Bangkok" && p.zone !== "Europe/London"),
 ];
 
 const TIME_OPTIONS: { value: TimeFormat; label: string }[] = [
@@ -34,7 +49,8 @@ function reloadApp() {
 }
 
 export function SettingsPage() {
-  const { settings, updateSettings } = useSettings();
+  const { settings, updateSettings, dateTime } = useSettings();
+  const now = new Date(useNow(1000));
   const { reset } = useLayout();
   const [message, setMessage] = useState<Message>(null);
   const [pending, setPending] = useState<Extract<ParsedBackup, { ok: true }> | null>(null);
@@ -135,6 +151,39 @@ export function SettingsPage() {
             ))}
           </fieldset>
 
+          <fieldset className="settings-group">
+            <legend>รูปแบบวันที่</legend>
+            {DATE_LOCALE_OPTIONS.map((option) => (
+              <label key={option.value} className="settings-option">
+                <input
+                  type="radio"
+                  name="dateLocale"
+                  value={option.value}
+                  checked={settings.dateLocale === option.value}
+                  onChange={() => updateSettings({ dateLocale: option.value })}
+                />
+                {option.label}
+              </label>
+            ))}
+          </fieldset>
+
+          <div className="settings-group">
+            <label className="field" style={{ width: "100%" }}>
+              <span className="settings-heading">เขตเวลา</span>
+              <select className="input" value={settings.timeZone} onChange={(e) => updateSettings({ timeZone: e.target.value })}>
+                {ZONE_OPTIONS.map((z) => (
+                  <option key={z.zone} value={z.zone}>
+                    {z.label}
+                  </option>
+                ))}
+                <option value={DEVICE_ZONE}>ตามอุปกรณ์นี้ ({deviceTimeZone()})</option>
+              </select>
+            </label>
+            <p className="settings-help" role="status">
+              ตอนนี้: {formatLongDate(now, dateTime)} เวลา {formatTime(now, dateTime, settings.timeFormat === "12h", false)}
+            </p>
+          </div>
+
           <div className="settings-group">
             <h3 className="settings-heading">Dashboard</h3>
             <p className="settings-help">จัดลำดับ ปรับขนาด และซ่อนวิดเจ็ตได้จากปุ่ม “ปรับแต่ง” ในหน้า Dashboard</p>
@@ -193,7 +242,7 @@ export function SettingsPage() {
                 {pending.data.toolData ? ` ข้อมูลเครื่องมืออื่น ${Object.keys(pending.data.toolData).length} ชุด` : ""}
                 {pending.data.settings ? " การตั้งค่า" : ""}
                 {pending.data.layout ? " และ Dashboard" : ""}
-                {pending.exportedAt ? ` (สำรองเมื่อ ${new Date(pending.exportedAt).toLocaleString("th-TH")})` : ""}
+                {pending.exportedAt ? ` (สำรองเมื่อ ${formatDateTime(new Date(pending.exportedAt).getTime(), dateTime)})` : ""}
                 {pending.skipped > 0 ? ` · ข้ามข้อมูลที่ไม่ถูกต้อง ${pending.skipped} รายการ` : ""}
                 <br />
                 <strong>ข้อมูลปัจจุบันในเครื่องนี้จะถูกแทนที่ด้วยข้อมูลจากไฟล์</strong> แนะนำให้สำรองข้อมูลปัจจุบันก่อน

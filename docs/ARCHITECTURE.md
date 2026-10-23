@@ -53,7 +53,7 @@ Hash routing (`#/`, `#/tools/<id>`, `#/settings`) เพราะ GitHub Pages �
 
 | ข้อมูล | ที่เก็บ | Key / Store | Schema |
 | --- | --- | --- | --- |
-| การตั้งค่า | LocalStorage | `productivity-hub:settings` | `{ version: 1, theme, timeFormat }` |
+| การตั้งค่า | LocalStorage | `productivity-hub:settings` | `{ version: 1, theme, timeFormat, dateLocale, timeZone }` (สองช่องหลังเพิ่มใน 1.2.0 ค่าเริ่มต้น `th` / `Asia/Bangkok`) |
 | Dashboard | LocalStorage | `productivity-hub:layout` | `{ version: 2, columns, items }` |
 | Timer | LocalStorage | `productivity-hub:timer:stopwatch` / `:countdown` | state machine ที่อิง timestamp |
 | งาน | IndexedDB `productivity-hub` v2 | `tasks` | `{ id, title, done, order, createdAt, updatedAt }` |
@@ -77,3 +77,7 @@ Hash routing (`#/`, `#/tools/<id>`, `#/settings`) เพราะ GitHub Pages �
 ## Design tokens
 
 `src/styles/tokens.css` (สี ระยะห่างแบบ 4px, radius, ฟอนต์ที่รองรับไทย) ธีมมืดผ่าน `data-theme="dark"` บน `<html>`
+
+## วันและเวลา
+
+`src/lib/datetime.ts` เป็นที่เดียวที่จัดรูปแบบวันเวลา โดยรับ `{ locale, timeZone }` จากการตั้งค่า (`useDateTime()` ใน `SettingsContext`) ไม่ใช้ภาษา/เขตเวลาของอุปกรณ์ “วันนี้” คำนวณในเขตเวลาที่ตั้งไว้ (`todayIn`) ช่องกรอกวันที่ใช้ `src/components/DateInput.tsx` เก็บค่าเป็น ISO (ค.ศ.) เสมอ แต่แสดงปี พ.ศ. เมื่อเลือกรูปแบบไทย

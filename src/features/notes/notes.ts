@@ -30,6 +30,4 @@ export function searchNotes(notes: readonly Note[], query: string): Note[] {
     .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-export function formatUpdated(timestamp: number): string {
-  return new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(timestamp);
-}
+export { formatDateTime as formatUpdated } from "../../lib/datetime";

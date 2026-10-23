@@ -3,7 +3,8 @@ import { Pause, Play, RotateCcw, SkipForward } from "lucide-react";
 import { useNow } from "../../hooks/useNow";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import { playBeep } from "../../lib/sound";
-import { today, toIsoDate } from "../calendar/dates";
+import { toIsoDate } from "../calendar/dates";
+import { useDateTime } from "../settings/SettingsContext";
 import { formatCountdown } from "../timer/timer";
 import { advance, createPomodoro, parsePomodoro, pause, POMODORO_KEY, remaining, reset, start, tick, updateSettings, type Phase, type PomodoroSettings } from "./pomodoro";
 import "./life.css";
@@ -16,6 +17,7 @@ function currentTime(): number {
 const PHASE_LABEL: Record<Phase, string> = { focus: "🍅 โฟกัส", "short-break": "☕ พักสั้น", "long-break": "🌿 พักยาว" };
 
 export default function PomodoroWidget() {
+  const { today } = useDateTime();
   const todayIso = toIsoDate(today());
   const [stored, setStored] = usePersistentState(POMODORO_KEY, parsePomodoro, () => createPomodoro(undefined, todayIso));
   const now = useNow(250, stored.running);
