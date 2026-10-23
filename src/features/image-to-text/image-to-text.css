@@ -1,0 +1,37 @@
+.drop-zone {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.drop-zone.is-dragging {
+  border-color: var(--color-primary);
+  background: var(--color-surface-muted);
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 260px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+}
+
+.image-options {
+  gap: var(--space-1) var(--space-4);
+}
+
+.prompt-output {
+  min-height: 240px;
+  white-space: pre;
+  overflow: auto;
+  font-size: 0.8rem;
+}
+
+.image-to-text progress {
+  width: 100%;
+}
