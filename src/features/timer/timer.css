@@ -1,0 +1,95 @@
+.timer {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: center;
+}
+
+.timer > [role="tabpanel"] {
+  width: 100%;
+}
+
+.timer-panel {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+}
+
+.timer-display {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(2.25rem, 9vw, 3rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-display.is-finished {
+  color: var(--color-danger);
+}
+
+.timer-alert {
+  min-height: 1.6em;
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.timer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.timer-laps {
+  width: 100%;
+  max-width: 360px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.timer-laps li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.timer-laps span {
+  color: var(--color-text-muted);
+}
+
+.countdown-form {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.countdown-field {
+  display: grid;
+  gap: var(--space-1);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.countdown-field input {
+  width: 72px;
+  height: 44px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.timer-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}

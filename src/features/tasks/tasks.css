@@ -1,0 +1,87 @@
+.tasks {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.tasks-add,
+.task-edit {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.tasks-add .input,
+.task-edit .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.tasks-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.task-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.task-item:hover {
+  background: var(--color-surface-muted);
+}
+
+.task-item.is-editing {
+  display: block;
+}
+
+.task-check {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.task-check input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
+.task-title {
+  overflow-wrap: anywhere;
+}
+
+.task-item.is-done .task-title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.task-actions {
+  display: flex;
+  flex: none;
+}
+
+.empty-hint {
+  margin: 0;
+  padding: var(--space-3) 0;
+  text-align: center;
+}

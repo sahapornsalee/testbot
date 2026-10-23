@@ -1,0 +1,64 @@
+/* Design tokens. Change the look of the whole app here, not per widget. */
+:root {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-on-primary: #ffffff;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f5f9;
+  --color-text: #0f172a;
+  --color-text-muted: #475569;
+  --color-border: #e2e8f0;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fef2f2;
+  --color-warning-bg: #fffbeb;
+  --color-warning-text: #92400e;
+  --color-success: #15803d;
+  --color-focus: #2563eb;
+  --color-favorite: #d97706;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* 4px spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", "Sarabun", "Leelawadee UI",
+    "Thonburi", Tahoma, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.08);
+  --header-height: 60px;
+  --sidebar-width: 248px;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --color-primary: #60a5fa;
+  --color-primary-hover: #93c5fd;
+  --color-on-primary: #0b1220;
+  --color-bg: #0b1220;
+  --color-surface: #111a2e;
+  --color-surface-muted: #1a2540;
+  --color-text: #e2e8f0;
+  --color-text-muted: #a3b1c6;
+  --color-border: #26324d;
+  --color-danger: #fca5a5;
+  --color-danger-bg: #3b1219;
+  --color-warning-bg: #3a2a0c;
+  --color-warning-text: #fcd34d;
+  --color-success: #86efac;
+  --color-focus: #93c5fd;
+  --color-favorite: #fbbf24;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+
+  color-scheme: dark;
+}

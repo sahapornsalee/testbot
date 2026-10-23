@@ -1,0 +1,137 @@
+.notes {
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) 1fr;
+  gap: var(--space-4);
+  min-height: 360px;
+}
+
+.notes-notice {
+  grid-column: 1 / -1;
+}
+
+.notes-sidebar {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.notes-search {
+  position: relative;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.notes-search .input {
+  flex: 1;
+  min-width: 0;
+  padding-left: 32px;
+}
+
+.notes-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.note-list {
+  display: grid;
+  gap: var(--space-1);
+  max-height: 460px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.note-list-item {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.note-list-item:hover {
+  background: var(--color-surface-muted);
+}
+
+.note-list-item[aria-current="true"] {
+  border-color: var(--color-primary);
+  background: var(--color-surface-muted);
+}
+
+.note-list-item strong,
+.note-list-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-list-item span,
+.note-list-item small {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.note-editor {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: var(--space-2);
+  height: 100%;
+}
+
+.note-editor-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.note-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.note-body {
+  min-height: 280px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.notes-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  margin: 0;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.notes-back {
+  visibility: hidden;
+}
+
+@container widget (max-width: 600px) {
+  .notes {
+    grid-template-columns: 1fr;
+  }
+
+  .notes.has-selection .notes-sidebar,
+  .notes:not(.has-selection) .notes-editor-pane {
+    display: none;
+  }
+
+  .notes-back {
+    visibility: visible;
+  }
+}

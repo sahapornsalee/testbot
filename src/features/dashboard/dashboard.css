@@ -1,0 +1,171 @@
+.dashboard-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.dashboard-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.widget.is-editing {
+  cursor: grab;
+  border-style: dashed;
+}
+
+.widget.is-hidden {
+  opacity: 0.6;
+}
+
+.drag-handle {
+  color: var(--color-text-muted);
+}
+
+.widget-edit {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+
+.widget-edit p {
+  margin: 0;
+}
+
+.inline-size .input {
+  width: auto;
+  min-height: 32px;
+  padding: 2px var(--space-2);
+}
+
+.other-tools {
+  margin-top: var(--space-8);
+}
+
+.section-title {
+  margin-bottom: var(--space-3);
+  font-size: 1.15rem;
+}
+
+.add-card {
+  width: 100%;
+  border-style: dashed;
+  text-align: left;
+  cursor: pointer;
+}
+
+.add-card .add-icon {
+  margin-left: auto;
+  flex: none;
+  color: var(--color-primary);
+}
+
+.widget {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.widget-title {
+  flex: 1;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.widget-body {
+  container: widget / inline-size;
+  padding: var(--space-4);
+}
+
+.widget-loading {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.widget-error {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.widget-error p {
+  margin: 0;
+}
+
+.icon-btn.is-favorite {
+  color: var(--color-favorite);
+}
+
+.empty-state {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  padding: var(--space-6);
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.tool-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.tool-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tool-card:hover {
+  border-color: var(--color-primary);
+}
+
+.tool-card strong {
+  display: block;
+}
+
+.tool-card span {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.tool-page {
+  max-width: 960px;
+}
