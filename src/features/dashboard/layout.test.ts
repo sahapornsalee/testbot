@@ -6,6 +6,7 @@ import {
   moveWidget,
   parseLayout,
   removeWidget,
+  fillRows,
   resolveColumns,
   setWidgetHidden,
   setWidgetSize,
@@ -108,5 +109,27 @@ describe("columns", () => {
     expect(spanFor("large", 2)).toBe(2);
     expect(spanFor("medium", 3)).toBe(2);
     expect(spanFor("small", 1)).toBe(1);
+  });
+});
+
+describe("fillRows", () => {
+  it("leaves rows that are already full unchanged", () => {
+    expect(fillRows([1, 1, 2], 4)).toEqual([1, 1, 2]);
+  });
+
+  it("widens the narrowest cards so each row is full, keeping order", () => {
+    // [calendar 2, timer 1] cannot take notes (3), so the row is filled.
+    expect(fillRows([1, 1, 2, 2, 1, 3], 4)).toEqual([1, 1, 2, 2, 2, 4]);
+  });
+
+  it("spreads leftover columns across small cards", () => {
+    expect(fillRows([1, 1], 4)).toEqual([2, 2]);
+    expect(fillRows([1, 1, 1], 4)).toEqual([2, 1, 1]);
+  });
+
+  it("caps spans to the column count and handles one column", () => {
+    expect(fillRows([3, 2], 2)).toEqual([2, 2]);
+    expect(fillRows([1, 2, 3], 1)).toEqual([1, 1, 1]);
+    expect(fillRows([], 3)).toEqual([]);
   });
 });

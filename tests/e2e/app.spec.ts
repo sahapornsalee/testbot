@@ -15,18 +15,38 @@ test("loads the dashboard with all assets and no horizontal overflow", async ({ 
   expect(errors).toEqual([]);
 });
 
-test("cards in the same dashboard row have equal height", async ({ page }) => {
+test("dashboard cards tile: equal height per row and every row full width", async ({ page }) => {
   await page.goto("./");
-  await expect(page.getByLabel("นิพจน์ที่ต้องการคำนวณ")).toBeVisible();
-  const boxes = await page.locator(".dashboard-grid > .widget").evaluateAll((cards) =>
-    cards.map((card) => {
-      const rect = card.getBoundingClientRect();
-      return { top: Math.round(rect.top), height: Math.round(rect.height) };
-    }),
+  // A layout that used to leave holes: [clock, tasks, calculator] [calendar, timer] [notes].
+  await page.evaluate(() =>
+    localStorage.setItem(
+      "productivity-hub:layout",
+      JSON.stringify({
+        version: 2,
+        columns: "auto",
+        items: ["clock", "tasks", "calculator", "calendar", "timer", "notes"].map((id) => ({
+          id,
+          size: id === "clock" || id === "tasks" || id === "timer" ? "small" : id === "notes" ? "large" : "medium",
+          hidden: false,
+        })),
+      }),
+    ),
   );
-  const rows = new Map<number, number[]>();
-  for (const box of boxes) rows.set(box.top, [...(rows.get(box.top) ?? []), box.height]);
-  for (const heights of rows.values()) expect(new Set(heights).size).toBe(1);
+  await page.reload();
+  await expect(page.getByLabel("นิพจน์ที่ต้องการคำนวณ")).toBeVisible();
+  const { gridRight, boxes } = await page.locator(".dashboard-grid").evaluate((grid) => ({
+    gridRight: Math.round(grid.getBoundingClientRect().right),
+    boxes: Array.from(grid.children).map((card) => {
+      const rect = card.getBoundingClientRect();
+      return { top: Math.round(rect.top), height: Math.round(rect.height), right: Math.round(rect.right) };
+    }),
+  }));
+  const rows = new Map<number, typeof boxes>();
+  for (const box of boxes) rows.set(box.top, [...(rows.get(box.top) ?? []), box]);
+  for (const row of rows.values()) {
+    expect(new Set(row.map((b) => b.height)).size).toBe(1);
+    expect(Math.abs(Math.max(...row.map((b) => b.right)) - gridRight)).toBeLessThanOrEqual(1);
+  }
 });
 
 test("navigates with the menu and supports direct links and refresh", async ({ page }) => {

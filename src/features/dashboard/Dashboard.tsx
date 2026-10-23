@@ -4,6 +4,7 @@ import { WIDGETS } from "../../app/registry";
 import { useElementWidth } from "../../hooks/useElementWidth";
 import {
   addWidget,
+  fillRows,
   moveWidget,
   removeWidget,
   resolveColumns,
@@ -39,6 +40,11 @@ export function Dashboard() {
     return widget ? [{ item, widget }] : [];
   });
   const shown = editing ? entries : entries.filter((e) => !e.item.hidden);
+  // Fill every row completely so the cards tile without gaps.
+  const spans = fillRows(
+    shown.map(({ item }) => spanFor(item.size, columns)),
+    columns,
+  );
   const notOnDashboard = WIDGETS.filter((w) => !layout.items.some((i) => i.id === w.id));
   const hiddenCount = entries.length - entries.filter((e) => !e.item.hidden).length;
 
@@ -110,7 +116,7 @@ export function Dashboard() {
           <WidgetFrame
             key={widget.id}
             widget={widget}
-            style={{ gridColumn: `span ${spanFor(item.size, columns)}` }}
+            style={{ gridColumn: `span ${spans[index] ?? 1}` }}
             {...(editing
               ? {
                   edit: {
