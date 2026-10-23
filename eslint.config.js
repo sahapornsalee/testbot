@@ -12,11 +12,16 @@ export default tseslint.config(
       ecmaVersion: 2022,
       globals: globals.browser,
     },
-    plugins: { "react-hooks": reactHooks },
     rules: {
-      ...reactHooks.configs.recommended.rules,
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/consistent-type-imports": "error",
     },
+  },
+  {
+    // React rules apply to app code only. Playwright fixtures call a `use`
+    // callback that the hooks rule would mistake for React's use().
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { "react-hooks": reactHooks },
+    rules: reactHooks.configs.recommended.rules,
   },
 );
