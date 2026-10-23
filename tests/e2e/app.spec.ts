@@ -15,6 +15,20 @@ test("loads the dashboard with all assets and no horizontal overflow", async ({ 
   expect(errors).toEqual([]);
 });
 
+test("cards in the same dashboard row have equal height", async ({ page }) => {
+  await page.goto("./");
+  await expect(page.getByLabel("นิพจน์ที่ต้องการคำนวณ")).toBeVisible();
+  const boxes = await page.locator(".dashboard-grid > .widget").evaluateAll((cards) =>
+    cards.map((card) => {
+      const rect = card.getBoundingClientRect();
+      return { top: Math.round(rect.top), height: Math.round(rect.height) };
+    }),
+  );
+  const rows = new Map<number, number[]>();
+  for (const box of boxes) rows.set(box.top, [...(rows.get(box.top) ?? []), box.height]);
+  for (const heights of rows.values()) expect(new Set(heights).size).toBe(1);
+});
+
 test("navigates with the menu and supports direct links and refresh", async ({ page }) => {
   await page.goto("./");
   await openMenuIfMobile(page);

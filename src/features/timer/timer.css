@@ -2,6 +2,8 @@
   display: grid;
   gap: var(--space-4);
   justify-items: center;
+  /* Vertically centred when the card is stretched to its row height. */
+  margin-block: auto;
 }
 
 .timer > [role="tabpanel"] {

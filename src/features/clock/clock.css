@@ -1,5 +1,7 @@
 .clock {
   text-align: center;
+  /* Vertically centred when the card is stretched to its row height. */
+  margin-block: auto;
 }
 
 .clock-time {
