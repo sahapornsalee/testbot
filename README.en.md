@@ -45,7 +45,8 @@ tail -f data/logs/api.log          # logs
 | Job queue: queued → inspecting → downloading → processing → completed / failed / cancelled / expired | ✅ |
 | **Multi-connection downloads (IDM-style):** files split into segments fetched over up to 8 parallel connections; dropped segments resume automatically | ✅ (when the server supports Range) |
 | **Pause / resume:** partial data is kept; jobs interrupted by a restart become paused; a changed source file restarts cleanly | ✅ (direct files) |
-| **Page grabber:** analyze a web page to list its images, video, audio, documents and archives, tick and download them at once | ✅ |
+| **Grab everything on a page:** analyze a web page and pick anything on it — images (including lazy-loaded and CSS backgrounds), video, audio, documents, archives, streams hidden in player scripts, embedded videos (e.g. YouTube), other links, and the page itself (.html). No selection limit; the UI sends 50 per request | ✅ (pages that build their content with JavaScript after loading may be incomplete) |
+| **HLS streams (.m3u8):** pick from the real qualities, parallel segment download, pause/resume, clear-key AES-128, remux to MP4 with FFmpeg | ✅ (no live streams, DRM or DASH .mpd) |
 | **Batch add:** paste up to 50 links at once | ✅ |
 | Cancellation, automatic cleanup of temporary and expired files | ✅ |
 | Thai/English, responsive on mobile, tablet and desktop | ✅ |
@@ -261,7 +262,8 @@ Run `git status` before pushing and make sure no `.env`, `*.db` or `data/` folde
 - The job runner lives in the API process (single machine). Jobs running during a restart are marked `failed` (`INTERRUPTED`).
 - Rate limits are in memory; multiple processes need Redis or a reverse proxy.
 - No playlist support yet.
-- HLS/DASH streams (`.m3u8`/`.mpd`) cannot be downloaded directly yet (only via yt-dlp-supported sites), and there is no browser extension that captures downloads like IDM's.
+- DASH (`.mpd`), live streams and DRM-protected streams are not supported, and there is no browser extension that captures downloads like IDM's.
+- Pages that build their content with JavaScript after loading (e.g. infinite scroll) only expose what is in the initial HTML.
 - Only direct-file jobs can be paused; yt-dlp media jobs can be cancelled but not paused.
 
 ## License

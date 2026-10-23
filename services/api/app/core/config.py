@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     max_storage_mb: int = Field(default=10240, ge=1)
     max_concurrent_jobs: int = Field(default=2, ge=1, le=32)
     # Queued + running + paused jobs one owner may have (the queue length).
-    max_active_jobs_per_owner: int = Field(default=50, ge=1)
+    max_active_jobs_per_owner: int = Field(default=500, ge=1)
     # Parallel connections per direct download (IDM-style segmented download).
     max_connections_per_download: int = Field(default=8, ge=1, le=16)
     # Files smaller than 2 x this are downloaded over a single connection.

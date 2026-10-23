@@ -66,7 +66,9 @@ class PageLink(BaseModel):
     """A downloadable resource found on a web page (IDM-style "grab all links")."""
 
     url: str
-    category: Category | Literal["stream"]
+    # "media": a page/embed a site-specific yt-dlp extractor understands (e.g. a YouTube embed)
+    # "link": an ordinary link without a file extension; it may or may not be a file
+    category: Category | Literal["stream", "media", "link"]
     extension: str | None
     source: str  # the HTML element it came from: a, img, video, audio, source, ...
     label: str | None = None
@@ -89,11 +91,15 @@ class InspectResponse(BaseModel):
     warnings: list[str]
     media: MediaInfo | None = None
     links: list[PageLink] = []
+    # How to download this URL: "direct", "media", "hls" or "page".
+    download_mode: Literal["direct", "media", "hls", "page"] = "direct"
 
 
 class DownloadMode(StrEnum):
-    DIRECT = "direct"
-    MEDIA = "media"
+    DIRECT = "direct"  # a file, fetched with parallel segments when possible
+    MEDIA = "media"  # a page handled by yt-dlp
+    HLS = "hls"  # an .m3u8 stream
+    PAGE = "page"  # save the web page itself as an .html file
 
 
 class CreateDownloadRequest(BaseModel):

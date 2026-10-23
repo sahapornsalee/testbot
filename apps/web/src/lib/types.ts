@@ -45,7 +45,7 @@ export type MediaInfo = {
 
 export type PageLink = {
   url: string;
-  category: Category | "stream";
+  category: Category | "stream" | "media" | "link";
   extension: string | null;
   source: string;
   label: string | null;
@@ -68,12 +68,13 @@ export type InspectResult = {
   warnings: string[];
   media: MediaInfo | null;
   links: PageLink[];
+  download_mode: DownloadMode;
 };
 
 export type Job = {
   id: string;
   status: JobStatus;
-  mode: "direct" | "media";
+  mode: DownloadMode;
   source_host: string;
   filename: string | null;
   category: string | null;
@@ -101,9 +102,11 @@ export type Health = {
   tools: Record<string, string | null>;
 };
 
+export type DownloadMode = "direct" | "media" | "hls" | "page";
+
 export type CreateDownload = {
   url: string;
-  mode: "direct" | "media";
+  mode: DownloadMode;
   format_id?: string;
   merge_audio?: boolean;
 };

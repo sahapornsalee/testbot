@@ -17,6 +17,7 @@ export const fileResult: InspectResult = {
   warnings: [],
   media: null,
   links: [],
+  download_mode: "direct",
 };
 
 export const mediaResult: InspectResult = {
@@ -29,6 +30,7 @@ export const mediaResult: InspectResult = {
   category: "video",
   size_bytes: null,
   filename: "Clip",
+  download_mode: "media",
   media: {
     title: "Clip",
     duration_seconds: 125,
@@ -81,10 +83,14 @@ export const pageResult: InspectResult = {
   category: "document",
   downloadable: false,
   warnings: ["WEBPAGE_NOT_FILE"],
+  download_mode: "page",
   links: [
     { url: "https://site.example/a.pdf", category: "document", extension: "pdf", source: "a", label: "Report" },
     { url: "https://site.example/b.jpg", category: "image", extension: "jpg", source: "img", label: null },
     { url: "https://site.example/c.mp4", category: "video", extension: "mp4", source: "source", label: null },
     { url: "https://site.example/live.m3u8", category: "stream", extension: "m3u8", source: "a", label: "Live" },
+    { url: "https://site.example/dash.mpd", category: "stream", extension: "mpd", source: "script", label: null },
+    { url: "https://www.youtube.com/embed/xyz", category: "media", extension: null, source: "iframe", label: "Youtube" },
+    { url: "https://site.example/about", category: "link", extension: null, source: "a", label: "About" },
   ],
 };

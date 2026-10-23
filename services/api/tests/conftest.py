@@ -8,6 +8,9 @@ tests via ``DestinationPolicy(extra_allowed_networks=["127.0.0.1/32"])``.
 from __future__ import annotations
 
 import random
+import shutil
+import subprocess
+import tempfile
 import threading
 import time
 from collections.abc import Iterator
@@ -46,7 +49,10 @@ class FixtureHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         if self.command != "HEAD":
-            self.wfile.write(body)
+            try:
+                self.wfile.write(body)
+            except (BrokenPipeError, ConnectionResetError):
+                pass  # the downloader may hang up after the headers (e.g. file too large)
 
     def _ranged(self, body: bytes, content_type: str, extra: dict[str, str] | None = None) -> None:
         range_header = self.headers.get("Range")
@@ -172,6 +178,18 @@ class FixtureHandler(BaseHTTPRequestHandler):
                     self.wfile.write(payload)
             except (BrokenPipeError, ConnectionResetError):
                 pass
+        elif path.startswith("/hls/"):
+            name = path[len("/hls/") :]
+            FixtureHandler.range_log.setdefault("/hls", []).append(name)
+            if name not in HLS_FILES:
+                self._send(404, b"", {})
+                return
+            if name.startswith("slow-seg"):
+                time.sleep(0.3)
+            content_type = (
+                "application/vnd.apple.mpegurl" if name.endswith(".m3u8") else "video/mp2t"
+            )
+            self._send(200, HLS_FILES[name], {"Content-Type": content_type})
         elif path == "/gallery.html":
             self._send(200, GALLERY_HTML, {"Content-Type": "text/html; charset=utf-8"})
         elif path == "/redirect-safe":
@@ -264,3 +282,91 @@ def wait_for_terminal(client: TestClient, job_id: str, timeout: float = 15) -> d
             return job
         time.sleep(0.05)
     raise AssertionError(f"job {job_id} did not finish: {job}")
+
+
+def _make_ts() -> bytes:
+    """A real MPEG-TS clip when FFmpeg exists (so remuxing can be tested), else fake bytes."""
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = f"{tmp}/clip.ts"
+            subprocess.run(
+                [
+                    ffmpeg,
+                    "-nostdin",
+                    "-loglevel",
+                    "error",
+                    "-f",
+                    "lavfi",
+                    "-i",
+                    "testsrc=duration=3:size=160x120:rate=10",
+                    "-c:v",
+                    "mpeg2video",
+                    "-f",
+                    "mpegts",
+                    out,
+                ],
+                check=True,
+                timeout=60,
+            )
+            with open(out, "rb") as handle:
+                return handle.read()
+    return b"\x47" + random.Random(3).randbytes(188 * 300 - 1)
+
+
+def _encrypt(data: bytes, key: bytes, iv: bytes) -> bytes:
+    from cryptography.hazmat.primitives import padding
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+    padder = padding.PKCS7(128).padder()
+    padded = padder.update(data) + padder.finalize()
+    encryptor = Cipher(algorithms.AES(key), modes.CBC(iv)).encryptor()
+    return encryptor.update(padded) + encryptor.finalize()
+
+
+TS_CLIP = _make_ts()
+_cut = [0, (len(TS_CLIP) // 3) // 188 * 188, (2 * len(TS_CLIP) // 3) // 188 * 188, len(TS_CLIP)]
+TS_PARTS = [TS_CLIP[_cut[i] : _cut[i + 1]] for i in range(3)]
+HLS_KEY = bytes(range(16))
+HLS_IV = bytes(range(16, 32))
+
+
+def _media_playlist(names: list[str], extra: str = "", end: bool = True) -> bytes:
+    body = "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:0\n" + extra
+    body += "".join(f"#EXTINF:1.0,\n{name}\n" for name in names)
+    return (body + ("#EXT-X-ENDLIST\n" if end else "")).encode()
+
+
+HLS_FILES: dict[str, bytes] = {
+    "master.m3u8": (
+        b"#EXTM3U\n"
+        b'#EXT-X-STREAM-INF:BANDWIDTH=300000,RESOLUTION=320x180,CODECS="avc1.4d401e,mp4a.40.2"\n'
+        b"low.m3u8\n"
+        b'#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=1280x720,CODECS="avc1.4d401f,mp4a.40.2"\n'
+        b"high.m3u8\n"
+    ),
+    "low.m3u8": _media_playlist(["low0.ts"]),
+    "low0.ts": b"\x47LOW" * 47,
+    "high.m3u8": _media_playlist(["seg0.ts", "seg1.ts", "seg2.ts"]),
+    "seg0.ts": TS_PARTS[0],
+    "seg1.ts": TS_PARTS[1],
+    "seg2.ts": TS_PARTS[2],
+    # AES-128: first two segments use an explicit IV, the last the sequence-number IV.
+    "aes.m3u8": (
+        b"#EXTM3U\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:0\n"
+        b'#EXT-X-KEY:METHOD=AES-128,URI="key.bin",IV=0x' + HLS_IV.hex().encode() + b"\n"
+        b"#EXTINF:1.0,\naes0.ts\n#EXTINF:1.0,\naes1.ts\n"
+        b'#EXT-X-KEY:METHOD=AES-128,URI="key.bin"\n#EXTINF:1.0,\naes2.ts\n#EXT-X-ENDLIST\n'
+    ),
+    "key.bin": HLS_KEY,
+    "aes0.ts": _encrypt(TS_PARTS[0], HLS_KEY, HLS_IV),
+    "aes1.ts": _encrypt(TS_PARTS[1], HLS_KEY, HLS_IV),
+    "aes2.ts": _encrypt(TS_PARTS[2], HLS_KEY, (2).to_bytes(16, "big")),
+    "live.m3u8": _media_playlist(["seg0.ts"], end=False),
+    "drm.m3u8": _media_playlist(
+        ["seg0.ts"],
+        extra='#EXT-X-KEY:METHOD=SAMPLE-AES,URI="skd://x",KEYFORMAT="com.apple.streamingkeydelivery"\n',
+    ),
+    "slow.m3u8": _media_playlist([f"slow-seg{i}.ts" for i in range(16)]),
+    **{f"slow-seg{i}.ts": bytes([i]) * 50_000 for i in range(16)},
+}

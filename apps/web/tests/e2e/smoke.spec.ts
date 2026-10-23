@@ -66,14 +66,30 @@ test("batch add links and pause/resume a download", async ({ page }) => {
   await expect(slow.getByText("Completed")).toBeVisible({ timeout: 30_000 });
 });
 
-test("grab files from a web page", async ({ page }) => {
+test("grab everything from a web page, including the page itself", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "English" }).click();
   await page.getByLabel("Link (URL)").fill(`${FIXTURE}/gallery.html`);
   await page.getByRole("button", { name: "Analyze" }).click();
   await expect(page.getByText(/Files found on this page \(\d+\)/)).toBeVisible();
   await expect(page.getByText("Annual report")).toBeVisible();
-  await page.getByRole("checkbox", { name: /Annual report/ }).check();
-  await page.getByRole("button", { name: "Download selected (1)" }).click();
-  await expect(page.getByText("1 added to the queue, 0 rejected.")).toBeVisible();
+  await page.getByRole("checkbox", { name: /Save this page/ }).check();
+  await page.getByRole("button", { name: "Select all" }).click();
+  await page.getByRole("button", { name: /Download selected \(\d+\)/ }).click();
+  await expect(page.getByText(/\d+ added to the queue/)).toBeVisible();
+  await page.getByRole("link", { name: "History" }).click();
+  const saved = page.getByTestId("job-card").filter({ hasText: "gallery.html" }).first();
+  await expect(saved.getByText("Completed")).toBeVisible({ timeout: 15_000 });
+});
+
+test("download an HLS stream at a chosen quality", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "English" }).click();
+  await page.getByLabel("Link (URL)").fill(`${FIXTURE}/hls/master.m3u8`);
+  await page.getByRole("button", { name: "Analyze" }).click();
+  await expect(page.getByRole("radio", { name: /720p/ })).toBeChecked();
+  await expect(page.getByRole("radio", { name: /180p/ })).toBeVisible();
+  await page.getByRole("button", { name: "Download", exact: true }).click();
+  const card = page.getByTestId("job-card").first();
+  await expect(card.getByText("Completed")).toBeVisible({ timeout: 20_000 });
 });

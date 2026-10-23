@@ -23,7 +23,7 @@ from app.core.config import Settings
 from app.core.errors import AppError, ErrorCode
 from app.core.url_policy import DestinationPolicy, validate_url
 from app.schemas.models import CreateDownloadRequest, DownloadMode, JobStatus
-from app.services import file_types, media
+from app.services import file_types, hls, media
 from app.services.direct import download_direct
 from app.services.job_store import (
     ACTIVE_STATUSES,
@@ -36,6 +36,8 @@ from app.services.storage import Storage
 logger = logging.getLogger("universal_downloader.jobs")
 PROGRESS_WRITE_INTERVAL = 0.5
 PAUSABLE_STATUSES = frozenset({JobStatus.QUEUED, JobStatus.INSPECTING, JobStatus.DOWNLOADING})
+# Modes whose partial data survives a pause (yt-dlp media jobs restart instead).
+PAUSABLE_MODES = frozenset({DownloadMode.DIRECT, DownloadMode.PAGE, DownloadMode.HLS})
 # Paused jobs keep their partial data at least this long, even with a short TTL.
 MIN_PAUSED_RETENTION = timedelta(hours=24)
 
@@ -72,7 +74,7 @@ class JobRunner:
     # -- lifecycle ---------------------------------------------------------------
     async def start(self) -> None:
         for job in self.store.list_by_status(ACTIVE_STATUSES):
-            if job.mode == DownloadMode.DIRECT and job.status in PAUSABLE_STATUSES:
+            if job.mode in PAUSABLE_MODES and job.status in PAUSABLE_STATUSES:
                 # Direct downloads keep their partial data: pause them so the user can resume.
                 self.store.update(job.id, status=JobStatus.PAUSED, paused_at=utcnow())
                 continue
@@ -119,7 +121,11 @@ class JobRunner:
                 mode=request.mode,
                 source_url=validated.url,
                 source_host=validated.host,
-                format_id=request.format_id if request.mode == DownloadMode.MEDIA else None,
+                format_id=(
+                    request.format_id or "best"
+                    if request.mode in (DownloadMode.MEDIA, DownloadMode.HLS)
+                    else None
+                ),
                 merge_audio=request.merge_audio,
             )
         )
@@ -143,8 +149,8 @@ class JobRunner:
 
     def pause(self, owner: str, job_id: str) -> JobRecord:
         job = self.store.get_for_owner(job_id, owner)
-        if job.mode != DownloadMode.DIRECT:
-            raise AppError(ErrorCode.INVALID_STATE, "Media downloads cannot be paused")
+        if job.mode not in PAUSABLE_MODES:
+            raise AppError(ErrorCode.INVALID_STATE, "This kind of download cannot be paused")
         if job.status not in PAUSABLE_STATUSES:
             raise AppError(ErrorCode.INVALID_STATE, "Only queued or downloading jobs can be paused")
         task = self._tasks.get(job_id)
@@ -241,12 +247,48 @@ class JobRunner:
             job_id, status=JobStatus.INSPECTING, started_at=job.started_at or utcnow()
         )
         await self.policy.validate(job.source_url)
-        if job.mode == DownloadMode.DIRECT:
-            await self._execute_direct(job)
+        if job.mode in (DownloadMode.DIRECT, DownloadMode.PAGE):
+            await self._execute_direct(job, allow_html=job.mode == DownloadMode.PAGE)
+        elif job.mode == DownloadMode.HLS:
+            await self._execute_hls(job)
         else:
             await self._execute_media(job)
 
-    async def _execute_direct(self, job: JobRecord) -> None:
+    async def _execute_hls(self, job: JobRecord) -> None:
+        ffmpeg = media.ffmpeg_path(self.settings.ffmpeg_location)
+        self.store.update(job.id, status=JobStatus.DOWNLOADING, category="video")
+        work_dir = self.storage.temp_job_dir(job.id)
+        async with self._client_factory() as client:
+            result = await hls.download_hls(
+                client,
+                job.source_url,
+                work_dir,
+                format_id=job.format_id or "best",
+                max_bytes=self.settings.max_file_size_bytes,
+                max_redirects=self.settings.max_redirects,
+                connections=self.settings.max_connections_per_download,
+                ffmpeg=ffmpeg,
+                on_progress=self._progress_writer(job.id),
+                on_plan=lambda count: self.store.update(job.id, connections=count),
+            )
+        filename = file_types.sanitize_filename(
+            f"{result.title}{result.ext}", fallback_stem="stream"
+        )
+        with result.path.open("rb") as handle:
+            head = handle.read(8192)
+        mime = file_types.resolve_mime(None, file_types.sniff_mime(head), filename)
+        if result.ext == ".ts":
+            mime = "video/mp2t"
+        self.store.update(
+            job.id,
+            status=JobStatus.PROCESSING,
+            downloaded_bytes=result.size,
+            filename=filename,
+            content_type=mime,
+        )
+        self._commit(job.id, result.path, filename, result.size)
+
+    async def _execute_direct(self, job: JobRecord, allow_html: bool = False) -> None:
         self.store.update(job.id, status=JobStatus.DOWNLOADING)
         temp_file = self.storage.temp_path(job.id)
         async with self._client_factory() as client:
@@ -265,6 +307,7 @@ class JobRunner:
                 min_segment_bytes=self.settings.min_segment_bytes,
                 state_path=self.storage.temp_path(job.id, ".state.json"),
                 on_plan=lambda count: self.store.update(job.id, connections=count),
+                allow_html=allow_html,
             )
         self.store.update(
             job.id,
@@ -281,11 +324,14 @@ class JobRunner:
         info = await media.inspect_media(
             job.source_url, self.settings.media_inspect_timeout_seconds, ffmpeg
         )
-        selected = next((f for f in info.formats if f.format_id == job.format_id), None)
+        wanted = info.best_format_id if job.format_id == "best" else job.format_id
+        selected = next((f for f in info.formats if f.format_id == wanted), None)
         if selected is None:
             raise AppError(ErrorCode.FORMAT_NOT_AVAILABLE, "The selected format is not available")
         selector = selected.format_id
-        if job.merge_audio and selected.kind == "video":
+        # "best" is chosen for the user (e.g. a video ticked on a page), so give it sound.
+        merge = job.merge_audio or (job.format_id == "best" and ffmpeg is not None)
+        if merge and selected.kind == "video":
             if ffmpeg is None:
                 raise AppError(ErrorCode.MEDIA_TOOL_MISSING, "FFmpeg is required to merge audio")
             selector = f"{selected.format_id}+bestaudio"

@@ -33,6 +33,16 @@ block private ranges at the network layer** for the process/container that runs 
 (firewall egress rules, a dedicated network namespace, or a cloud security group). Set
 `YTDLP_ENABLED=false` if you cannot do this.
 
+### HLS streams and page grabbing
+
+The playlist, every segment and every AES-128 key are fetched through the pinned, SSRF-guarded
+client, and every URL inside a playlist is validated. FFmpeg is only used to remux files already
+on disk, with `-protocol_whitelist file` so it cannot open network URLs. Live, DRM (SAMPLE-AES,
+non-identity KEYFORMAT) and byte-range playlists are refused. The page grabber fetches only the
+page (≤ `MAX_PAGE_BYTES`) and does not request any found link; each one is validated again when the
+user downloads it. Saved pages (`mode=page`) are always served as `application/octet-stream`
+attachments with a sandbox CSP.
+
 ## File safety (implemented)
 
 - Size limit enforced on the stream (with or without Content-Length), on decoded bytes.

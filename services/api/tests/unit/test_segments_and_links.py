@@ -56,8 +56,10 @@ def test_extract_links_from_page() -> None:
     )  # no extension, but <audio>
     assert by_url[base + "live/playlist.m3u8"].category == "stream"
     assert by_url["https://cdn.example.com/cover.jpg"].source == "meta"
-    # ordinary page links, javascript: and data: URLs are not files
-    assert "http://site.example/about" not in by_url
+    # ordinary page links are kept as "link" after all files; javascript:/data: are dropped
+    about = by_url["http://site.example/about"]
+    assert about.category == "link" and about.label == "About us"
+    assert links[-1].url == "http://site.example/about"
     assert not any(url.startswith(("javascript", "data")) for url in by_url)
     # duplicates are removed
     assert len(by_url) == len(links)
@@ -69,3 +71,40 @@ def test_extract_links_caps_and_rejects_internal_syntax() -> None:
     links = extract_links(html, "https://e.com/")
     assert len(links) == 500
     assert all("@" not in link.url for link in links)
+
+
+SNIFF_HTML = """<html><head>
+<link rel="icon" href="/favicon.ico">
+<link rel="preload" as="image" href="/hero">
+<style>.hero { background: url('/img/bg.webp') } .f { src: url(/font.woff2) }</style>
+<script type="application/ld+json">{"@type": "VideoObject", "contentUrl": "https://v.example/movie.mp4",
+ "thumbnailUrl": ["https://v.example/thumb.jpg"], "embedUrl": "https://www.youtube.com/embed/abc"}</script>
+<script>var player = {file: "https:\\/\\/cdn.example\\/hls\\/master.m3u8?token=1"};</script>
+</head><body>
+<img data-src="/lazy/one.jpg" src="/placeholder.gif">
+<div style="background-image:url(&quot;/img/tile.png&quot;)"></div>
+<iframe src="https://www.youtube.com/embed/xyz"></iframe>
+<a href="/download?id=7">Get it</a>
+</body></html>"""
+
+
+def test_extract_links_sniffs_lazy_css_scripts_and_embeds() -> None:
+    media_pages = {"https://www.youtube.com/embed/xyz", "https://www.youtube.com/embed/abc"}
+    links = extract_links(
+        SNIFF_HTML, "https://site.example/p", lambda url: "Youtube" if url in media_pages else None
+    )
+    by_url = {link.url: link for link in links}
+    assert by_url["https://site.example/lazy/one.jpg"].category == "image"
+    assert by_url["https://site.example/img/bg.webp"].source == "style"
+    assert by_url["https://site.example/img/tile.png"].source == "style"
+    assert by_url["https://site.example/favicon.ico"].category == "image"
+    assert by_url["https://site.example/hero"].category == "image"  # preload as=image, no extension
+    assert by_url["https://v.example/movie.mp4"].source == "json-ld"
+    assert by_url["https://cdn.example/hls/master.m3u8?token=1"].category == "stream"
+    assert by_url["https://www.youtube.com/embed/xyz"].category == "media"
+    assert by_url["https://www.youtube.com/embed/abc"].category == "media"
+    assert by_url["https://site.example/download?id=7"].category == "link"
+    assert "https://site.example/font.woff2" not in by_url  # unknown extension from CSS: ignored
+    order = [link.category for link in links]
+    assert order.index("media") > max(i for i, c in enumerate(order) if c not in ("media", "link"))
+    assert order[-1] == "link"

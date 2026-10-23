@@ -39,7 +39,8 @@ Response (`InspectResponse`):
 | `accepts_ranges` | server supports byte ranges |
 | `downloadable` | false for web pages or files over the limit |
 | `warnings` | `SIZE_UNKNOWN`, `FILE_TOO_LARGE`, `WEBPAGE_NOT_FILE`, `RISKY_FILE_TYPE`, `NO_FORMATS`, `FFMPEG_MISSING` |
-| `links` | for `kind=webpage`: downloadable resources found on the page — `url`, `category` (`image`/`video`/`audio`/`document`/`archive`/`other`/`stream`), `extension`, `source` element, `label` (link text/alt). Max 500; only the page is fetched (≤ `MAX_PAGE_BYTES`), each link is validated again when downloaded |
+| `links` | for `kind=webpage`: everything found on the page — `url`, `category` (`image`/`video`/`audio`/`document`/`archive`/`other`, `stream` for .m3u8/.mpd, `media` for pages a site-specific yt-dlp extractor understands such as a YouTube embed, `link` for other links), `extension`, `source` (`a`, `img`, `source`, `style`, `script`, `json-ld`, `iframe`, `link`, `meta`…), `label`. Files first, then `media`, then `link`; max 500. Only the page is fetched (≤ `MAX_PAGE_BYTES`); each item is validated again when downloaded |
+| `download_mode` | how to download this URL: `direct`, `media` (yt-dlp), `hls` (stream), `page` (save the HTML) |
 | `media` | for `kind=media`: `title`, `duration_seconds`, `uploader`, `extractor`, `formats[]`, `best_format_id`, `ffmpeg_available` |
 
 Each media format: `format_id`, `ext`, `kind` (`video+audio`/`video`/`audio`), `width`, `height`,
@@ -51,8 +52,10 @@ reports are listed; DRM formats and storyboards are removed.
 { "url": "https://example.com/file.pdf", "mode": "direct" }
 { "url": "https://video.example/watch?v=1", "mode": "media", "format_id": "137", "merge_audio": true }
 ```
-`format_id` must match `^[A-Za-z0-9_.-]{1,64}$` and is re-verified against a fresh inspection when
-the job runs. `merge_audio` only applies to video-only formats and needs FFmpeg.
+Modes: `direct` (a file), `media` (yt-dlp page), `hls` (an .m3u8 stream; `format_id` is `best` or a
+variant id `v0`, `v1`… from inspect), `page` (save the web page itself as .html, served as an
+attachment). `format_id` must match `^[A-Za-z0-9_.-]{1,64}$`; `best` picks the highest real quality
+(and merges audio for yt-dlp when FFmpeg exists). It is re-verified when the job runs. `merge_audio` only applies to video-only formats and needs FFmpeg.
 Returns a `JobView`.
 
 ### `POST /downloads/batch` → `202`

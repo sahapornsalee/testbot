@@ -60,7 +60,9 @@
     "document": "Document",
     "archive": "Archive",
     "other": "Other",
-    "stream": "Stream"
+    "stream": "Stream",
+    "media": "Embedded video",
+    "link": "Link"
   },
   "warnings": {
     "SIZE_UNKNOWN": "The server did not report the file size.",
@@ -191,7 +193,13 @@
     "download": "Download selected ({n})",
     "all": "All",
     "stream": "Streams",
-    "streamNote": "Streaming playlists (.m3u8/.mpd) are listed for reference; downloading them is not supported yet.",
-    "from": "from <{source}>"
+    "streamNote": "Streams (.m3u8) are saved at the best quality available and converted to MP4 when FFmpeg is installed. DASH (.mpd) is not supported yet.",
+    "from": "from <{source}>",
+    "media": "Embedded videos",
+    "link": "Other links",
+    "savePage": "Save this page as an .html file",
+    "linkNote": "Other links may lead to web pages instead of files; those will fail with a clear message. They are not included in \"Select all\".",
+    "adding": "Adding {done} of {total}…",
+    "selected": "{n} selected"
   }
 }

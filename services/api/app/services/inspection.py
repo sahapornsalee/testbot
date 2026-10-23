@@ -10,7 +10,7 @@ from app.core.config import Settings
 from app.core.errors import AppError
 from app.core.url_policy import DestinationPolicy
 from app.schemas.models import InspectResponse
-from app.services import file_types, media
+from app.services import file_types, hls, media
 from app.services.direct import inspect_http
 from app.services.page_links import fetch_page_links
 
@@ -51,9 +51,31 @@ async def inspect_url(
             downloadable=bool(info.formats),
             warnings=warnings,
             media=info,
+            download_mode="media",
         )
 
     result = await inspect_http(client, url, settings.max_redirects)
+    if hls.is_playlist(result.final_url, result.declared_content_type):
+        ffmpeg_ok = media.ffmpeg_path(settings.ffmpeg_location) is not None
+        info = await hls.inspect_stream(client, result.final_url, settings.max_redirects, ffmpeg_ok)
+        return InspectResponse(
+            url=url,
+            final_url=result.final_url,
+            redirect_chain=result.redirect_chain,
+            kind="media",
+            status_code=result.status_code,
+            content_type="application/vnd.apple.mpegurl",
+            declared_content_type=result.declared_content_type,
+            category="video",
+            size_bytes=None,
+            filename=file_types.sanitize_filename(info.title, fallback_stem="stream"),
+            extension=None,
+            accepts_ranges=False,
+            downloadable=True,
+            warnings=[] if ffmpeg_ok else ["FFMPEG_MISSING"],
+            media=info,
+            download_mode="hls",
+        )
     warnings = []
     downloadable = True
     kind = "file"
@@ -68,6 +90,7 @@ async def inspect_url(
                 result.final_url,
                 max_redirects=settings.max_redirects,
                 max_bytes=settings.max_page_bytes,
+                media_detector=media.dedicated_extractor if settings.ytdlp_enabled else None,
             )
         except (AppError, httpx.HTTPError):
             warnings.append("PAGE_NOT_READABLE")
@@ -99,4 +122,5 @@ async def inspect_url(
         downloadable=downloadable,
         warnings=warnings,
         links=links,
+        download_mode="page" if kind == "webpage" else "direct",
     )

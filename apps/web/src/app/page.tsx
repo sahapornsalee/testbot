@@ -10,7 +10,7 @@ import { useJobs } from "@/features/jobs/useJobs";
 import { useI18n } from "@/i18n/I18nProvider";
 import { QUEUE_STATUSES, type InspectResult } from "@/lib/types";
 
-const RECENT_FINISHED = 5;
+const RECENT_FINISHED = 20;
 
 export default function DashboardPage() {
   const { t } = useI18n();

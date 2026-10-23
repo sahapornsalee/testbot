@@ -48,7 +48,12 @@ export function InspectResultView({
     try {
       const job = await api.createDownload(
         result.kind === "media" && selected
-          ? { url: result.url, mode: "media", format_id: selected.format_id, merge_audio: merge }
+          ? {
+              url: result.url,
+              mode: result.download_mode === "hls" ? "hls" : "media",
+              format_id: selected.format_id,
+              merge_audio: merge,
+            }
           : { url: result.url, mode: "direct" },
       );
       setCreated(true);
@@ -130,7 +135,7 @@ export function InspectResultView({
       )}
 
       {result.kind === "webpage" && (
-        <PageLinks links={result.links ?? []} onQueued={() => onQueued?.()} />
+        <PageLinks pageUrl={result.final_url} links={result.links ?? []} onQueued={() => onQueued?.()} />
       )}
 
       {result.kind !== "webpage" && (

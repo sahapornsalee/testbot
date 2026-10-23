@@ -16,7 +16,6 @@ from app.schemas.models import (
     BatchDownloadResponse,
     BatchError,
     CreateDownloadRequest,
-    DownloadMode,
     ErrorBody,
     ErrorResponse,
     HealthResponse,
@@ -29,7 +28,7 @@ from app.schemas.models import (
 from app.services import media
 from app.services.inspection import inspect_url
 from app.services.job_store import JobRecord
-from app.workers.runner import PAUSABLE_STATUSES
+from app.workers.runner import PAUSABLE_MODES, PAUSABLE_STATUSES
 
 router = APIRouter(prefix="/api/v1", responses={400: {"model": ErrorResponse}})
 JobId = Annotated[str, Path(pattern=r"^[0-9a-f]{32}$")]
@@ -83,7 +82,7 @@ def to_view(job: JobRecord) -> JobView:
         else None,
         download_available=job.status == JobStatus.COMPLETED and job.file_path is not None,
         connections=job.connections,
-        can_pause=job.mode == DownloadMode.DIRECT and job.status in PAUSABLE_STATUSES,
+        can_pause=job.mode in PAUSABLE_MODES and job.status in PAUSABLE_STATUSES,
         can_resume=job.status == JobStatus.PAUSED,
     )
 

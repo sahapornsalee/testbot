@@ -213,7 +213,8 @@ def test_inspect_web_page_lists_downloadable_links(client: TestClient, fixture_s
     urls = {link["url"]: link for link in body["links"]}
     assert urls[fixture_server + "/files/report.pdf"]["label"] == "Annual report"
     assert urls[fixture_server + "/files/clip.mp4"]["category"] == "video"
-    assert fixture_server + "/about" not in urls
+    assert urls[fixture_server + "/about"]["category"] == "link"
+    assert body["download_mode"] == "page"
     assert "SIZE_UNKNOWN" not in body["warnings"]
 
 

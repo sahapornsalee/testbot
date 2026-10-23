@@ -214,6 +214,7 @@ async def download_direct(
     min_segment_bytes: int = 1024 * 1024,
     state_path: Path | None = None,
     on_plan: Callable[[int], None] | None = None,
+    allow_html: bool = False,
 ) -> DirectResult:
     """Download ``url`` into ``destination``.
 
@@ -237,6 +238,7 @@ async def download_direct(
                 connections=connections,
                 min_segment_bytes=min_segment_bytes,
                 on_plan=on_plan,
+                allow_html=allow_html,
             )
         except _SourceChanged:
             state_path.unlink(missing_ok=True)
@@ -245,7 +247,11 @@ async def download_direct(
 
 
 async def _probe(
-    client: httpx.AsyncClient, url: str, max_redirects: int, max_bytes: int
+    client: httpx.AsyncClient,
+    url: str,
+    max_redirects: int,
+    max_bytes: int,
+    allow_html: bool = False,
 ) -> tuple[str, httpx.Response, int | None, bool, str | None, str, str | None]:
     """Read the response headers of a ``Range: bytes=0-`` request, then drop the body."""
     async with open_stream(
@@ -257,7 +263,7 @@ async def _probe(
                 ErrorCode.SOURCE_UNAVAILABLE, f"The source answered HTTP {response.status_code}"
             )
         declared = file_types.normalize_mime(response.headers.get("content-type"))
-        if declared == "text/html":
+        if declared == "text/html" and not allow_html:
             raise AppError(
                 ErrorCode.UNSUPPORTED_CONTENT,
                 "The URL points to a web page, not a downloadable file",
@@ -294,9 +300,10 @@ async def _download(
     connections: int,
     min_segment_bytes: int,
     on_plan: Callable[[int], None] | None,
+    allow_html: bool,
 ) -> DirectResult:
     final_url, _resp, size, ranged, validator, filename, declared = await _probe(
-        client, url, max_redirects, max_bytes
+        client, url, max_redirects, max_bytes, allow_html
     )
     if on_metadata is not None:
         on_metadata(filename, declared)
@@ -432,7 +439,7 @@ async def _download(
     with destination.open("rb") as handle:
         head = handle.read(SNIFF_BYTES)
     mime = file_types.resolve_mime(declared, file_types.sniff_mime(head), filename)
-    if mime == "text/html":
+    if mime == "text/html" and not allow_html:
         raise AppError(
             ErrorCode.UNSUPPORTED_CONTENT, "The URL points to a web page, not a downloadable file"
         )
