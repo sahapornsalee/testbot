@@ -46,7 +46,7 @@ export function AppShell({ route, query, onQueryChange, notice, children }: Prop
     return () => window.removeEventListener("keydown", onKey);
   }, [menuOpen]);
 
-  const categories = [...new Set(WIDGETS.map((w) => w.category))] as ToolCategory[];
+  const categories = (Object.keys(CATEGORY_LABELS) as ToolCategory[]).filter((c) => WIDGETS.some((w) => w.category === c));
   const ThemeIcon = settings.theme === "light" ? Sun : settings.theme === "dark" ? Moon : Monitor;
 
   const navLink = (target: Route, label: string, icon: ReactNode) => (

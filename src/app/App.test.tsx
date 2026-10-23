@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { LAYOUT_KEY, LEGACY_FAVORITES_KEY } from "../features/dashboard/layout";
 import { SETTINGS_KEY } from "../features/settings/settings";
 import { renderApp } from "../test/renderApp";
+import { WIDGETS } from "./registry";
 
 const storedLayout = () => JSON.parse(localStorage.getItem(LAYOUT_KEY) ?? "{}");
 const region = (name: string) => screen.queryByRole("region", { name });
@@ -105,7 +106,7 @@ describe("App", () => {
   it("opens every tool page from a direct link without crashing", async () => {
     renderApp("#/tools/calculator");
     expect(await screen.findByLabelText("นิพจน์ที่ต้องการคำนวณ")).toBeInTheDocument();
-    for (const id of ["clock", "timer", "calendar", "converter", "percentage", "tasks", "notes", "json", "markdown", "uuid", "text"]) {
+    for (const { id } of WIDGETS) {
       act(() => {
         window.location.hash = `#/tools/${id}`;
         window.dispatchEvent(new HashChangeEvent("hashchange"));
@@ -119,7 +120,7 @@ describe("App", () => {
       window.dispatchEvent(new HashChangeEvent("hashchange"));
     });
     expect(screen.getByRole("heading", { name: "ไม่พบหน้านี้" })).toBeInTheDocument();
-  });
+  }, 60_000);
 
   it("changes the time format on the settings page", async () => {
     const user = userEvent.setup();

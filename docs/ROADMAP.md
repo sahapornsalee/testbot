@@ -7,7 +7,8 @@
 | Phase 2 | Local Data และ Customization | Dashboard ลาก/ปรับขนาด/ซ่อน, IndexedDB, Notes, To-do, Import/Export | รีเฟรชแล้วข้อมูลยังอยู่ สำรองข้อมูลได้ | เสร็จ |
 | Phase 3 | เครื่องมือเพิ่มเติม | ปฏิทิน แปลงหน่วย เปอร์เซ็นต์ JSON Markdown UUID ข้อความ ค้นหาตามหมวด | validation + tests ทุกเครื่องมือ | เสร็จ |
 | Phase 4 | PWA และ Offline | Manifest service worker offline fallback การอัปเดต cache | ใช้งานออฟไลน์ได้จริง | เสร็จ (ทดสอบ E2E บน Chromium) |
-| Phase 5 | QA Security Release | E2E, accessibility, dependency audit, CI/CD, rollback | ผ่านก่อนอนุมัติเผยแพร่ | เสร็จฝั่งโค้ด — รอผู้ใช้เปิด Pages (L4) |
+| Phase 5 | QA Security Release | E2E, accessibility, dependency audit, CI/CD, rollback | ผ่านก่อนอนุมัติเผยแพร่ | เสร็จ — เผยแพร่แล้ว |
+| v1.1 | เครื่องมือออฟไลน์เพิ่ม | การเงิน ชีวิตประจำวัน สุขภาพ ความปลอดภัย (20 เครื่องมือ) | tests + E2E ออฟไลน์ | เสร็จ |
 
 ## ไอเดียสำหรับเวอร์ชันถัดไป (ยังไม่อยู่ในขอบเขต)
 

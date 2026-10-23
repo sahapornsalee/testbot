@@ -18,11 +18,11 @@ describe("searchWidgets", () => {
   });
 
   it("matches category labels", () => {
-    expect(ids("เวลาและปฏิทิน").sort()).toEqual(["calendar", "clock", "timer"]);
+    expect(ids("เวลาและปฏิทิน").sort()).toEqual(["age", "calendar", "clock", "events", "pomodoro", "timer", "world-clock"]);
   });
 
   it("requires every term to match", () => {
-    expect(ids("เวลา countdown")).toEqual(["timer"]);
+    expect(ids("เวลา countdown").sort()).toEqual(["events", "timer"]);
     expect(ids("calculator countdown")).toEqual([]);
   });
 

@@ -82,7 +82,7 @@ export function SettingsPage() {
   };
 
   const clearData = async () => {
-    if (!window.confirm("ลบข้อมูลทั้งหมด (งาน บันทึก การตั้งค่า และ Dashboard)? การลบนี้ย้อนกลับไม่ได้ ควรสำรองข้อมูลก่อน")) return;
+    if (!window.confirm("ลบข้อมูลทั้งหมด (งาน บันทึก บัญชี ข้อมูลเครื่องมือ การตั้งค่า และ Dashboard)? การลบนี้ย้อนกลับไม่ได้ ควรสำรองข้อมูลก่อน")) return;
     setBusy(true);
     try {
       await clearAllData();
@@ -189,12 +189,14 @@ export function SettingsPage() {
               </h3>
               <p id="import-desc" className="settings-help">
                 ไฟล์นี้มีงาน {pending.data.tasks.length} รายการ บันทึก {pending.data.notes.length} รายการ
+                {pending.data.expenses ? ` รายรับรายจ่าย ${pending.data.expenses.length} รายการ` : ""}
+                {pending.data.toolData ? ` ข้อมูลเครื่องมืออื่น ${Object.keys(pending.data.toolData).length} ชุด` : ""}
                 {pending.data.settings ? " การตั้งค่า" : ""}
                 {pending.data.layout ? " และ Dashboard" : ""}
                 {pending.exportedAt ? ` (สำรองเมื่อ ${new Date(pending.exportedAt).toLocaleString("th-TH")})` : ""}
                 {pending.skipped > 0 ? ` · ข้ามข้อมูลที่ไม่ถูกต้อง ${pending.skipped} รายการ` : ""}
                 <br />
-                <strong>ข้อมูลงานและบันทึกปัจจุบันจะถูกแทนที่ทั้งหมด</strong> แนะนำให้สำรองข้อมูลปัจจุบันก่อน
+                <strong>ข้อมูลปัจจุบันในเครื่องนี้จะถูกแทนที่ด้วยข้อมูลจากไฟล์</strong> แนะนำให้สำรองข้อมูลปัจจุบันก่อน
               </p>
               <div className="button-row">
                 <button type="button" className="btn" disabled={busy} onClick={exportData}>
@@ -212,7 +214,7 @@ export function SettingsPage() {
 
           <div className="settings-group danger-zone">
             <h3 className="settings-heading">ลบข้อมูลทั้งหมด</h3>
-            <p className="settings-help">ลบงาน บันทึก การตั้งค่า และ Dashboard ออกจากเบราว์เซอร์นี้</p>
+            <p className="settings-help">ลบงาน บันทึก บัญชีรายรับรายจ่าย ข้อมูลเครื่องมือทั้งหมด การตั้งค่า และ Dashboard ออกจากเบราว์เซอร์นี้</p>
             <button type="button" className="btn btn-danger" disabled={busy} onClick={clearData}>
               <Trash2 aria-hidden="true" size={16} /> ลบข้อมูลทั้งหมด
             </button>

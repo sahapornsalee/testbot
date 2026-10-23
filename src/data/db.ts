@@ -4,8 +4,9 @@
  */
 
 export const DB_NAME = "productivity-hub";
-export const DB_VERSION = 1;
-export const STORES = ["tasks", "notes"] as const;
+/** v1: tasks, notes · v2: expenses */
+export const DB_VERSION = 2;
+export const STORES = ["tasks", "notes", "expenses"] as const;
 export type StoreName = (typeof STORES)[number];
 
 export class StorageUnavailableError extends Error {
@@ -28,7 +29,8 @@ export function openDatabase(): Promise<IDBDatabase> {
       reject(error instanceof StorageUnavailableError ? error : new StorageUnavailableError(String(error)));
       return;
     }
-    // Schema migrations: add a branch per version when DB_VERSION increases.
+    // Schema migrations: every version so far only adds stores, so creating
+    // the missing ones upgrades any older database without touching its data.
     request.onupgradeneeded = () => {
       const db = request.result;
       for (const store of STORES) {
